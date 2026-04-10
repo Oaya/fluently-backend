@@ -1,10 +1,20 @@
-<p>Hello <%= @resource.email %>,</p>
-
-<p>You’ve been invited to join <%= @resource.tenant&.name || Rails.application.class.module_parent_name %>.</p>
-
+<% role = @resource.membership&.role %>
+<% tenant_name = @resource.tenant&.name || Rails.application.class.module_parent_name %>
 <% frontend = ENV.fetch(Rails.application.credentials.frontend_url, "http://localhost:5173") %>
 <% accept_url = "#{frontend}/accept-invite?invitation_token=#{@token}&tenant=#{ERB::Util.url_encode(@resource.tenant.name)}" %>
 
+<% if role == "admin" %>
+  <p>Hello <%= @resource.email %>,</p>
+  <p>You’ve been invited as an <strong>administrator</strong> of <%= tenant_name %>.</p>
+  <p>As an admin, you’ll have full access to manage users, courses, and settings.</p>
+<% elsif role == "instructor" %>
+  <p>Hello <%= @resource.email %>,</p>
+  <p>You’ve been invited as an <strong>instructor</strong> at <%= tenant_name %>.</p>
+  <p>You’ll be able to create and manage your courses once you accept.</p>
+<% else %>
+  <p>Hello <%= @resource.email %>,</p>
+  <p>You’ve been invited to start learning at <%= tenant_name %>.</p>
+<% end %>
 
 <p>
   <a href="<%= accept_url %>">Accept invitation</a>
