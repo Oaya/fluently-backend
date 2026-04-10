@@ -5,15 +5,15 @@
 
 <% if role == "admin" %>
   <p>Hello <%= @resource.email %>,</p>
-  <p>You've been invited as an <strong>administrator</strong> of <%= tenant_name %>.</p>
-  <p>As an admin, you'll have full access to manage users, courses, and settings.</p>
+  <p>You’ve been invited as an <strong>administrator</strong> of <%= tenant_name %>.</p>
+  <p>As an admin, you’ll have full access to manage users, courses, and settings.</p>
 <% elsif role == "instructor" %>
   <p>Hello <%= @resource.email %>,</p>
-  <p>You've been invited as an <strong>instructor</strong> at <%= tenant_name %>.</p>
-  <p>You'll be able to create and manage your courses once you accept.</p>
+  <p>You’ve been invited as an <strong>instructor</strong> at <%= tenant_name %>.</p>
+  <p>You’ll be able to create and manage your courses once you accept.</p>
 <% else %>
   <p>Hello <%= @resource.email %>,</p>
-  <p>You've been invited to start learning at <%= tenant_name %>.</p>
+  <p>You’ve been invited to start learning at <%= tenant_name %>.</p>
 <% end %>
 
 <p>
