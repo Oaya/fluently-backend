@@ -45,6 +45,21 @@ class InviteUser
           role: @params[:role]
         )
 
+        # If the user role is student then create enrolment
+        if @params[:role].to_s.downcase == "student" && @params[:courses].present?
+          course_ids = @params[:courses].map { |c| c[:id] }
+
+          course_ids.each do |course_id|
+            Enrollment.find_or_create_by!(
+              user: invited_user,
+              course_id: course_id,
+              tenant: @tenant
+            )
+          end
+
+          invited_user.invited_courses = Course.where(id: course_ids)
+        end
+
         # Send invitation now after created Member
         invited_user.deliver_invitation
         invited_user

@@ -3,6 +3,7 @@ class Course < ApplicationRecord
   has_many :sections, dependent: :destroy
   has_many :course_instructors, dependent: :destroy
   has_many :instructors, through: :course_instructors, source: :instructor
+  has_many :enrollments
   has_one_attached :thumbnail
 
   validates :title, presence: true, on: :create

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_20_223739) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_14_205940) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -63,6 +63,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_20_223739) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["tenant_id"], name: "index_courses_on_tenant_id"
+  end
+
+  create_table "enrollments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "course_id", null: false
+    t.datetime "created_at", null: false
+    t.uuid "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.uuid "user_id", null: false
+    t.index ["course_id"], name: "index_enrollments_on_course_id"
+    t.index ["tenant_id", "user_id", "course_id"], name: "index_enrollments_on_tenant_id_and_user_id_and_course_id", unique: true
+    t.index ["tenant_id"], name: "index_enrollments_on_tenant_id"
+    t.index ["user_id"], name: "index_enrollments_on_user_id"
   end
 
   create_table "lessons", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -166,6 +178,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_20_223739) do
   add_foreign_key "course_instructors", "courses"
   add_foreign_key "course_instructors", "users", column: "instructor_id"
   add_foreign_key "courses", "tenants"
+  add_foreign_key "enrollments", "courses"
+  add_foreign_key "enrollments", "tenants"
+  add_foreign_key "enrollments", "users"
   add_foreign_key "lessons", "sections"
   add_foreign_key "lessons", "tenants"
   add_foreign_key "memberships", "tenants"

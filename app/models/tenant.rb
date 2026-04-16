@@ -6,6 +6,7 @@ class Tenant < ApplicationRecord
   has_many :lessons
   has_many :memberships
   has_many :users, through: :memberships
+  has_many :enrollments
 
   validates :name, presence: true, uniqueness: true
   validates :plan_id, presence: true

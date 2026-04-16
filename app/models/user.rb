@@ -1,9 +1,12 @@
 class User < ApplicationRecord
   include Filterable
 
+  attr_accessor :invited_courses
+
   belongs_to :tenant
   has_one :membership, dependent: :destroy
   has_one_attached :avatar
+  has_many :enrollments
 
   validates :first_name, :last_name, :email, :tenant_id, presence: true
   validates :email, uniqueness: { case_sensitive: false }
