@@ -75,7 +75,22 @@ class Api::UsersController < ApplicationController
         id: course.id,
         title: course.title,
         published: course.published
-        # include enrollment status for the course for this user
+      }
+    }
+  end
+
+  def enrollments
+    user = Current.tenant.users.find(params[:id])
+    enrollments = user.enrollments.includes(:course).order(created_at: :desc)
+
+    render json: enrollments.map { |enrollment|
+      {
+        id: enrollment.id,
+        status: enrollment.status,
+        course: enrollment.course.as_json.merge(
+          thumbnail: enrollment.course.thumbnail.attached? ? rails_blob_url(enrollment.course.thumbnail, host: request.base_url) : nil # rubocop:disable Lint/Syntax
+        ),
+        enrolled_at: enrollment.created_at
       }
     }
   end

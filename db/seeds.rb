@@ -93,3 +93,5 @@ pp tenant
 end
 
 pp "Created 10 users for tenant #{tenant.name}"
+
+load Rails.root.join("db/seeds/courses.rb")

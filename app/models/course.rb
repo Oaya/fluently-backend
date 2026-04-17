@@ -13,25 +13,25 @@ class Course < ApplicationRecord
 
 
   enum :category, {
-   development: "Development",
-    business: "Business",
-    finance: "Finance",
-    it_software: "IT & Software",
-    design: "Design",
-    marketing: "Marketing",
-    lifestyle: "Lifestyle",
-    personal_development: "Personal Development",
-    photography: "Photography",
-    health_fitness: "Health & Fitness",
-    music: "Music",
-    teaching_academics: "Teaching & Academics"
+    development: "development",
+    business: "business",
+    finance: "finance",
+    it_software: "it_software",
+    design: "design",
+    marketing: "marketing",
+    lifestyle: "lifestyle",
+    personal_development: "personal_development",
+    photography: "photography",
+    health_fitness: "health_fitness",
+    music: "music",
+    teaching_academics: "teaching_academics"
   }
 
   enum :level, {
-    beginner: "Beginner",
-    intermediate: "Intermediate",
-    advanced: "Advanced",
-    all_levels: "All Levels"
+    beginner: "beginner",
+    intermediate: "intermediate",
+    advanced: "advanced",
+    all_levels: "all_levels"
   }
 
   private

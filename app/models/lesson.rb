@@ -10,8 +10,8 @@ class Lesson < ApplicationRecord
 
 
   enum :lesson_type, {
-    video: "Video",
-    reading: "Reading"
+    video: "video",
+    reading: "reading"
   }
 
 
@@ -34,7 +34,7 @@ class Lesson < ApplicationRecord
   end
 
   def video_validation
-    return unless lesson_type == "Video" || video.attached?
+    return unless lesson_type == "video" || video.attached?
 
     allowed = [ "video/mp4", "video/webm", "video/ogg" ]
 
