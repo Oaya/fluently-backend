@@ -8,7 +8,6 @@ class SeedLessonProgressForEnrollment
       .order(:position)
       .includes(:lessons)
       .each do |section|
-
       section.lessons.order(:position).each do |lesson|
         LessonProgress.find_or_create_by!(
           enrollment: @enrollment,

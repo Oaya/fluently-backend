@@ -2,7 +2,6 @@ require "test_helper"
 include TestDataHelper
 
 class EnrollmentTest < ActiveSupport::TestCase
-
   test "creates lesson progress for each course lesson when enrollment is created" do
     plan = create_plan
     tenant = create_tenant(plan: plan)

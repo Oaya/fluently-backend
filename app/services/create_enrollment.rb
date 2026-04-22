@@ -4,7 +4,7 @@ class CreateEnrollment
       @course = course
       @tenant = tenant
     end
-  
+
     def call
       Enrollment.transaction do
         enrollment = Enrollment.find_or_create_by!(
@@ -14,10 +14,10 @@ class CreateEnrollment
         ) do |e|
           e.status = :enrolled
         end
-  
+
         SeedLessonProgressForEnrollment.new(enrollment).call
-  
+
         enrollment
       end
     end
-  end
+end

@@ -17,7 +17,7 @@ class Section < ApplicationRecord
   def assign_position
     return if position.present?
     return if course_id.nil?
-  
+
     self.position ||= Section.where(course_id: course_id)
                             .maximum(:position).to_i + 1
   end

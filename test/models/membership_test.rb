@@ -16,13 +16,13 @@ class MembershipTest < ActiveSupport::TestCase
       tenant: @tenant,
       role: "admin"
     )
-  
+
     duplicate = Membership.new(
       user: @user,
       tenant: @tenant,
       role: "admin"
     )
-  
+
     assert_not duplicate.valid?
     assert_includes duplicate.errors[:user_id], "has already been taken"
   end

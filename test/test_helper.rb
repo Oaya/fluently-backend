@@ -19,7 +19,7 @@ module TestDataHelper
     Plan.create!({
       name: "Test Plan",
       price: 10,
-      features: {"max_courses" => 10, "max_admin" => 2, "max_users" => 100, "quizzes" => false }
+      features: { "max_courses" => 10, "max_admin" => 2, "max_users" => 100, "quizzes" => false }
     }.merge(attrs))
   end
 

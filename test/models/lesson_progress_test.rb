@@ -4,18 +4,18 @@ include TestDataHelper
 class LessonProgressTest < ActiveSupport::TestCase
   setup do
     @plan = create_plan
-  
+
     @tenant = create_tenant(plan: @plan)
-  
+
     @course = Course.create!(tenant: @tenant, title: "Test Course", description: "Test Course Description")
-  
+
     @section = Section.create!(
       tenant: @tenant,
       course: @course,
       title: "Section A",
       description: "Section A Description"
     )
-  
+
     @user = User.create!(
       email: "lesson-progress-#{SecureRandom.hex(4)}@example.com",
       first_name: "Test",
@@ -26,20 +26,20 @@ class LessonProgressTest < ActiveSupport::TestCase
       password_confirmation: "password123",
       confirmed_at: Time.current
     )
-  
+
     @lesson = Lesson.create!(
       tenant: @tenant,
       section: @section,
       title: "Lesson A",
       lesson_type: "reading"
     )
-  
+
     @enrollment = CreateEnrollment.new(
       tenant: @tenant,
       user: @user,
       course: @course
     ).call
-  
+
     @enrollment.reload
     @lesson_progress = @enrollment.lesson_progresses.find_by!(lesson: @lesson)
   end
@@ -50,7 +50,7 @@ class LessonProgressTest < ActiveSupport::TestCase
       lesson: @lesson_progress.lesson,
       tenant: @tenant
     )
-  
+
     assert_raises(ActiveRecord::RecordNotUnique) do
       duplicate.save!(validate: false)
     end
