@@ -50,11 +50,8 @@ class InviteUser
           course_ids = @params[:courses].map { |c| c[:id] }
 
           course_ids.each do |course_id|
-            Enrollment.find_or_create_by!(
-              user: invited_user,
-              course_id: course_id,
-              tenant: @tenant
-            )
+            course = Course.find(course_id)
+            CreateEnrollment.new(user: invited_user, course: course, tenant: @tenant).call
           end
 
           invited_user.invited_courses = Course.where(id: course_ids)

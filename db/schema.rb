@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_16_234906) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_22_003613) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -68,6 +68,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_234906) do
   create_table "enrollments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "course_id", null: false
     t.datetime "created_at", null: false
+    t.uuid "last_accessed_lesson_id"
+    t.integer "overall_progress", default: 0, null: false
     t.string "status", default: "enrolled", null: false
     t.uuid "tenant_id", null: false
     t.datetime "updated_at", null: false
@@ -76,6 +78,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_234906) do
     t.index ["tenant_id", "user_id", "course_id"], name: "index_enrollments_on_tenant_id_and_user_id_and_course_id", unique: true
     t.index ["tenant_id"], name: "index_enrollments_on_tenant_id"
     t.index ["user_id"], name: "index_enrollments_on_user_id"
+  end
+
+  create_table "lesson_progresses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "enrollment_id", null: false
+    t.uuid "lesson_id", null: false
+    t.integer "progress", default: 0, null: false
+    t.string "status", default: "not_started", null: false
+    t.uuid "tenant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["enrollment_id", "lesson_id"], name: "index_lesson_progresses_on_enrollment_and_lesson", unique: true
+    t.index ["enrollment_id", "lesson_id"], name: "index_lesson_progresses_on_enrollment_id_and_lesson_id", unique: true
+    t.index ["lesson_id"], name: "index_lesson_progresses_on_lesson_id"
+    t.index ["tenant_id"], name: "index_lesson_progresses_on_tenant_id"
   end
 
   create_table "lessons", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -180,8 +196,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_234906) do
   add_foreign_key "course_instructors", "users", column: "instructor_id"
   add_foreign_key "courses", "tenants"
   add_foreign_key "enrollments", "courses"
+  add_foreign_key "enrollments", "lessons", column: "last_accessed_lesson_id"
   add_foreign_key "enrollments", "tenants"
   add_foreign_key "enrollments", "users"
+  add_foreign_key "lesson_progresses", "enrollments"
+  add_foreign_key "lesson_progresses", "lessons"
+  add_foreign_key "lesson_progresses", "tenants"
   add_foreign_key "lessons", "sections"
   add_foreign_key "lessons", "tenants"
   add_foreign_key "memberships", "tenants"

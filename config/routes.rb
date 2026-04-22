@@ -26,10 +26,13 @@ Rails.application.routes.draw do
       collection do
         get :instructors
         delete :bulk_delete
+ 
       end
       member do
         get :courses
         get :enrollments
+        
+        get "courses/:course_id/status", to: "users#course_status"
       end
     end
 

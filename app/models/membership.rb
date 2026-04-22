@@ -1,5 +1,5 @@
 class Membership < ApplicationRecord
-  belongs_to :user, dependent: :destroy
+  belongs_to :user
   belongs_to :tenant
 
   # unique index on user_id and tenant_id to prevent duplicate memberships

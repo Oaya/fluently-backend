@@ -23,8 +23,10 @@ class Lesson < ApplicationRecord
   # Auto assign the position when it's created
   def assign_position
     return if position.present?
+    return if section_id.nil?
 
-    self.position = section.lessons.maximum(:position).to_i + 1
+    self.position ||= Lesson.where(section_id: section_id)
+    .maximum(:position).to_i + 1
   end
 
   def move_positions
