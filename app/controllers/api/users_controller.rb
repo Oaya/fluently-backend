@@ -95,6 +95,24 @@ class Api::UsersController < ApplicationController
     }
   end
 
+  # #get the each user's enrollments and courses, then return the course progress for each enrollment. This is used for the dashboard page to show the user's progress in each course.
+  # #"users#course_status"
+  def course_status
+    user = Current.tenant.users.find(params[:id])
+    course = Current.tenant.courses.find(params[:course_id])
+    enrollment = user.enrollments.find_by(course: course)
+
+    unless enrollment
+      return render_error("User is not enrolled in this course", status: :not_found)
+    end
+
+    # # Assuming CourseProgress has a method to calculate progress percentage
+    # progress_percentage = CourseProgress.calculate_progress(enrollment)
+
+    render json: {
+      enrollment: enrollment
+    }
+  end
 
   private
 

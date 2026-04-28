@@ -15,8 +15,7 @@ class CreateEnrollment
           e.status = :enrolled
         end
 
-        SeedLessonProgressForEnrollment.new(enrollment).call
-
+        # SeedLessonProgressForEnrollment.new(enrollment).call
         enrollment
       end
     end

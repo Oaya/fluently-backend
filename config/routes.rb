@@ -56,6 +56,12 @@ Rails.application.routes.draw do
 
     resources :lessons, only: [ :show, :update, :destroy ]
 
+    resources :enrollments, only: [] do
+      member do
+        post :start
+      end
+    end
+
     resource :subscription, only: [] do
       collection do
         post :cancel
@@ -63,6 +69,9 @@ Rails.application.routes.draw do
         post :payment_checkout
       end
     end
+
+
+
 
 
     # Active Storage direct upload endpoint

@@ -19,5 +19,9 @@ class SeedLessonProgressForEnrollment
         end
       end
     end
+
+    # set the enrollment of the last_accessed_lesson to the first lesson of the course
+    first_lesson = @enrollment.course.sections.order(:position).first.lessons.order(:position).first
+    @enrollment.update(last_accessed_lesson_id: first_lesson.id) if first_lesson
   end
 end

@@ -40,8 +40,13 @@ class LessonProgressTest < ActiveSupport::TestCase
       course: @course
     ).call
 
-    @enrollment.reload
-    @lesson_progress = @enrollment.lesson_progresses.find_by!(lesson: @lesson)
+    @lesson_progress = LessonProgress.create!(
+      enrollment: @enrollment,
+      lesson: @lesson,
+      tenant: @tenant,
+      status: :not_started,
+      progress: 0
+    )
   end
 
   test "lesson_id uniqueness is scoped to enrollment" do
@@ -68,6 +73,13 @@ class LessonProgressTest < ActiveSupport::TestCase
       confirmed_at: Time.current
     )
     other_enrollment = CreateEnrollment.new(tenant: @tenant, user: other_user, course: @course).call
+    LessonProgress.create!(
+      enrollment: other_enrollment,
+      lesson: @lesson,
+      tenant: @tenant,
+      status: :not_started,
+      progress: 0
+    )
 
     enrollment_ids = LessonProgress.where(lesson: @lesson).pluck(:enrollment_id)
     assert_equal 2, enrollment_ids.uniq.size
