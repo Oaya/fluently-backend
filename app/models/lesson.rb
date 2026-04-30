@@ -5,6 +5,7 @@ class Lesson < ApplicationRecord
 
   validates :title, presence: true, on: :create
   validates :lesson_type, presence: true, on: :create
+  validates :duration_in_seconds, numericality: { only_integer: true, greater_than_or_equal_to: 0 },  presence: true, on: :create
   validates :position, presence: true, numericality: { only_integer: true }, uniqueness: { scope: :section_id }
   validate :video_validation
 

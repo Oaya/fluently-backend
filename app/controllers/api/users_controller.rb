@@ -1,6 +1,6 @@
 class Api::UsersController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin_or_instructor!, only: [ :index, :show, :courses, :instructors ]
+  before_action :require_admin_or_instructor!, only: [ :index, :courses, :instructors ]
   before_action :require_admin!, :require_active_tenant!, only: [  :bulk_delete ]
 
   # GET /api/users
@@ -95,8 +95,6 @@ class Api::UsersController < ApplicationController
     }
   end
 
-  # #get the each user's enrollments and courses, then return the course progress for each enrollment. This is used for the dashboard page to show the user's progress in each course.
-  # #"users#course_status"
   def course_status
     user = Current.tenant.users.find(params[:id])
     course = Current.tenant.courses.find(params[:course_id])
@@ -106,11 +104,24 @@ class Api::UsersController < ApplicationController
       return render_error("User is not enrolled in this course", status: :not_found)
     end
 
-    # # Assuming CourseProgress has a method to calculate progress percentage
-    # progress_percentage = CourseProgress.calculate_progress(enrollment)
+    total_lessons = Lesson.joins(section: :course).where(sections: { course_id: course.id }).count
+    lesson_progresses = []
+    progress_percentage = 0
+
+    if enrollment.in_progress? || enrollment.completed?
+      lesson_progresses = enrollment.lesson_progresses.includes(:lesson).map do |lp|
+        { lesson_id: lp.lesson_id, status: lp.status, progress: lp.progress }
+      end
+
+      completed_count = enrollment.lesson_progresses.where(status: :completed).count
+      progress_percentage = total_lessons > 0 ? (completed_count.to_f / total_lessons * 100).round(2) : 0
+    end
 
     render json: {
-      enrollment: enrollment
+      enrollment: enrollment,
+      progress_percentage: progress_percentage,
+      total_lessons: total_lessons,
+      lesson_progresses: lesson_progresses
     }
   end
 
