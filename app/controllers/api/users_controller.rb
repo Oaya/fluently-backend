@@ -110,7 +110,7 @@ class Api::UsersController < ApplicationController
 
     if enrollment.in_progress? || enrollment.completed?
       lesson_progresses = enrollment.lesson_progresses.includes(:lesson).map do |lp|
-        { lesson_id: lp.lesson_id, status: lp.status, progress: lp.progress }
+        { id: lp.id, lesson_id: lp.lesson_id, status: lp.status, progress: lp.progress }
       end
 
       completed_count = enrollment.lesson_progresses.where(status: :completed).count

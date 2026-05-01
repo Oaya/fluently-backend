@@ -59,6 +59,14 @@ Rails.application.routes.draw do
     resources :enrollments, only: [] do
       member do
         post :start
+        patch "lessons/:lesson_id/complete", to: "enrollments#complete_lesson"
+      end
+    end
+
+    resources :lesson_progresses, only: [] do
+      member do
+        patch :complete
+        patch :incomplete
       end
     end
 
