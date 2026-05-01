@@ -31,7 +31,8 @@ class LessonProgressTest < ActiveSupport::TestCase
       tenant: @tenant,
       section: @section,
       title: "Lesson A",
-      lesson_type: "reading"
+      lesson_type: "reading",
+      duration_in_seconds: 300,
     )
 
     @enrollment = CreateEnrollment.new(
