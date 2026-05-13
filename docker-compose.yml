@@ -10,7 +10,7 @@ services:
       - .:/rails
       - bundle_data:/usr/local/bundle
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       RAILS_ENV: development
       BUNDLE_WITHOUT: ""
@@ -33,7 +33,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5435:5432"
 
 volumes:
   postgres_data:

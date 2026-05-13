@@ -1,6 +1,7 @@
 class Lesson < ApplicationRecord
   belongs_to :tenant
   belongs_to :section
+  has_many :lesson_progresses, dependent: :destroy
   has_one_attached :video
 
   validates :title, presence: true, on: :create
@@ -17,11 +18,17 @@ class Lesson < ApplicationRecord
 
 
   before_validation :assign_position, on: :create
+  after_create :seed_progress_for_existing_enrollments
   after_destroy :move_positions
 
   private
 
-  # Auto assign the position when it's created
+  def seed_progress_for_existing_enrollments
+    return unless section.course.published?
+
+    SeedLessonProgressJob.perform_later(id)
+  end
+
   def assign_position
     return if position.present?
     return if section_id.nil?

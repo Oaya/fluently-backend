@@ -6,7 +6,7 @@ class  Api::EnrollmentsController < ApplicationController
     unless enrollment
       return render_error("Enrollment not found", status: :not_found)
     end
-    SeedLessonProgressForEnrollment.new(enrollment).call
+    SeedEnrollmentLessonProgressJob.perform_later(enrollment.id)
     enrollment.update(status: :in_progress)
   end
 

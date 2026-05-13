@@ -7,5 +7,13 @@ class Enrollment < ApplicationRecord
 
   enum :status, { enrolled: "enrolled", in_progress: "in_progress", completed: "completed" }
 
+  def overall_progress
+    total = Lesson.joins(section: :course).where(sections: { course_id: course_id }).count
+    return 0 if total == 0
+
+    completed = lesson_progresses.where(status: :completed).count
+    (completed.to_f / total * 100).round
+  end
+
   private
 end

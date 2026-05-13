@@ -16,7 +16,7 @@ class InviteUser
           return existing
         end
         # If the user exists but is not active, we can resend the invitation email by calling invite! again
-        existing.deliver_invitation
+        SendInvitationEmailJob.perform_later(existing.id)
         return existing
       end
 
@@ -58,7 +58,7 @@ class InviteUser
         end
 
         # Send invitation now after created Member
-        invited_user.deliver_invitation
+        SendInvitationEmailJob.perform_later(invited_user.id)
         invited_user
       end
   end
