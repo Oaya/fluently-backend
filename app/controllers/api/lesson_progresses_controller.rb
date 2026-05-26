@@ -12,6 +12,14 @@ class Api::LessonProgressesController < ApplicationController
     render_response
   end
 
+  def save_position
+    LessonProgressService.new(@lesson_progress).save_position(
+      position_params[:watched_seconds].to_i,
+      position_params[:duration_seconds].to_i
+    )
+    render_response
+  end
+
   private
 
   def set_lesson_progress
@@ -21,10 +29,14 @@ class Api::LessonProgressesController < ApplicationController
       .find(params[:id])
   end
 
+  def position_params
+    params.require(:lesson_progress).permit(:watched_seconds, :duration_seconds)
+  end
+
   def render_response
     enrollment = @lesson_progress.enrollment
     render json: {
-      lesson_progress: { id: @lesson_progress.id, status: @lesson_progress.status, progress: @lesson_progress.progress },
+      lesson_progress: { id: @lesson_progress.id, status: @lesson_progress.status, progress: @lesson_progress.progress, watched_seconds: @lesson_progress.watched_seconds },
       enrollment: { id: enrollment.id, status: enrollment.status, overall_progress: enrollment.overall_progress }
     }
   end

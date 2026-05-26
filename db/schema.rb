@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_01_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_25_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -87,6 +87,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_000000) do
     t.string "status", default: "not_started", null: false
     t.uuid "tenant_id", null: false
     t.datetime "updated_at", null: false
+    t.integer "watched_seconds", default: 0, null: false
     t.index ["enrollment_id", "lesson_id"], name: "index_lesson_progresses_on_enrollment_and_lesson", unique: true
     t.index ["enrollment_id", "lesson_id"], name: "index_lesson_progresses_on_enrollment_id_and_lesson_id", unique: true
     t.index ["lesson_id"], name: "index_lesson_progresses_on_lesson_id"

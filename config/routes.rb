@@ -67,6 +67,7 @@ Rails.application.routes.draw do
       member do
         patch :complete
         patch :incomplete
+        patch :save_position
       end
     end
 
