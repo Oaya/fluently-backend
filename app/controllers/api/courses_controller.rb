@@ -126,7 +126,7 @@ class  Api::CoursesController < ApplicationController
     course = Current.tenant.courses.find(params[:id])
 
     if course.update(price: params.require(:price))
-      render json: course_fetch_results(course, course.instructors), status: :created
+      render json: course_fetch_results(course, course.instructors), status: :okß
     else
       render_error(course.errors.full_messages,  status: :unprocessable_entity)
     end
@@ -137,7 +137,7 @@ class  Api::CoursesController < ApplicationController
     course = Current.tenant.courses.find(params[:id])
 
     if course.update(published: true)
-      render json: course, status: :created
+      render json: course, status: :ok
     else
       render_error(course.errors.full_messages, status: :unprocessable_entity)
     end
