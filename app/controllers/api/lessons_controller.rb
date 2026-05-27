@@ -24,18 +24,15 @@ class  Api::LessonsController < ApplicationController
   def create
     section = Current.tenant.sections.find(params[:section_id])
 
-    lp = lesson_params.to_h # normalize keys
-    signed_id = lp["video_signed_id"].to_s
+    lesson = new CreateLesson(
+      tenant: Current.tenant,
+      params: lesson_params.to_h,  # normalize keys
+      section: section
+    ).call()
 
-    lesson = section.lessons.new(lp.except("video_signed_id").merge(tenant: Current.tenant))
+    lesson.reload()
 
-    # Only attach if this is a video lesson AND the client provided a signed id
-    if lesson.video? && signed_id.present?
-      lesson.video.attach(signed_id)
-    end
-
-    if lesson.save
-      lesson.reload
+    if lesson.persisted? && lesson.errors.empty?
       render json: lesson_fetch_results(lesson), status: :created
     else
       render_error(lesson.errors.full_messages, status: :unprocessable_entity)
@@ -45,27 +42,7 @@ class  Api::LessonsController < ApplicationController
   # PATCH /api/lessons/:id
   def update
     lesson = Current.tenant.lessons.find(params[:id])
-
-    lp = lesson_params.to_h
-    has_video_key = lp.key?("video_signed_id")
-    signed_id = lp["video_signed_id"].to_s
-
-    ActiveRecord::Base.transaction do
-      # Update non-file fields first (or after—either is fine)
-      unless lesson.update(lp.except("video_signed_id"))
-        raise ActiveRecord::Rollback
-      end
-
-      # Only touch the attachment if the client sent the key at all
-      if lesson.video? && has_video_key
-        if signed_id.present?
-          pp "Attaching video with signed id: #{signed_id}"
-          lesson.video.attach(signed_id)
-        else
-          lesson.video.purge if lesson.video.attached?
-        end
-      end
-    end
+    UpdateLesson.new(lesson: lesson, params: lesson_params.to_h).call()
 
     lesson.reload
 

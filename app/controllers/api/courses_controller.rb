@@ -39,6 +39,7 @@ class  Api::CoursesController < ApplicationController
         tenant: Current.tenant,
         params: course_params.to_h
       ).call
+    course.reload()
 
     if course.persisted? && course.errors.empty?
       render json: course_fetch_results(course, instructors), status: :created
@@ -52,6 +53,7 @@ class  Api::CoursesController < ApplicationController
     course = Current.tenant.courses.find(params[:id])
 
     UpdateCourse.new(course: course, params: course_params.to_h).call
+    course.reload
 
     if course.errors.empty?
       render json: course_fetch_results(course, course.instructors), status: :ok
