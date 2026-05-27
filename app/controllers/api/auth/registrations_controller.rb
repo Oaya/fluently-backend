@@ -33,23 +33,27 @@ module Api
 
 
         # create tenant, user and membership save user and send confirmation
+        user = nil
         ActiveRecord::Base.transaction do
-          # if the plan is free, then the tenant status will be active immediately, otherwise the tenant status will be pending until the user completes the payment
           tenant_status = plan.name == "basic" ? "active" : "pending"
           tenant = Tenant.create!(name: tenant_params[:tenant], plan: plan, status: tenant_status)
-          pp tenant
 
-          # :comfirmable is enabled, so the user will be created with "invited" status and will be updated to "Active" after confirming email with Devise::ConfirmationsController
-          user = User.create!(sign_up_params.merge(email: email, tenant: tenant, status: "invited"))
-
-          pp user
+          user = User.new(sign_up_params.merge(email: email, tenant: tenant, status: "invited"))
+          user.skip_confirmation_notification!
+          user.save!
 
           tenant.update!(billing_owner_id: user.id)
 
           Membership.create!(user: user, tenant: tenant, role: "admin")
-
-          render json: { message: "Confirmation instruction sent to #{email}" }, status: :created
         end
+
+        begin
+          user.send_confirmation_instructions
+        rescue StandardError => e
+          Rails.logger.error("Failed to send confirmation email to #{email}: #{e.message}")
+        end
+
+        render json: { message: "Confirmation instruction sent to #{email}" }, status: :created
 
 
       rescue ActiveRecord::RecordInvalid => e
