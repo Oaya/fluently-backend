@@ -3,10 +3,11 @@ class CreateCourse
     @tenant = tenant
     @course_data = params.except(:instructor_ids)
     @instructor_ids = params[:instructor_ids] || []
+    @signed_id =  params[:thumbnail_signed_id].to_s
   end
 
   def call
-    course = @tenant.courses.new(@course_data)
+    @course = @tenant.courses.new(@course_data)
     max = @tenant.plan.features["max_courses"]
 
     # nil => unlimited
@@ -15,19 +16,25 @@ class CreateCourse
       return course
     end
 
-    course.save
+    @course.save
 
+    instructors = sync_instructors
 
-
-    # Find instructors and
-    if @instructor_ids.any?
-      instructors = User.where(id: @instructor_ids, tenant_id: @tenant.id)
-      instructors.each do |instructor|
-        CourseInstructor.find_or_create_by(course: course, instructor: instructor)
-      end
-    end
+    handle_thumbnail
 
     # return the course and instructors
-    return course, instructors
+    return @course, instructors
+  end
+
+  private
+
+  def sync_instructors
+    instructors = User.where(id: @instructor_ids, tenant_id: @tenant.id)
+    instructors.each { |instructor|   CourseInstructor.find_or_create_by(course: @course, instructor: instructor) }
+    instructors
+  end
+
+  def handle_thumbnail
+    @course.thumbnail.attach(@signed_id) if @signed_id.present?
   end
 end

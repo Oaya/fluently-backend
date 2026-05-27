@@ -34,20 +34,11 @@ class  Api::CoursesController < ApplicationController
 
   # POST /api/courses
   def create
-    cp = course_params.to_h
-    signed_id = cp["thumbnail_signed_id"].to_s
-
     course, instructors =
       CreateCourse.new(
         tenant: Current.tenant,
-        params: cp.except("thumbnail_signed_id")
+        params: course_params.to_h
       ).call
-
-    # Only attach if provided
-    if signed_id.present?
-      course.thumbnail.attach(signed_id)
-      course.reload
-    end
 
     if course.persisted? && course.errors.empty?
       render json: course_fetch_results(course, instructors), status: :created
@@ -60,27 +51,7 @@ class  Api::CoursesController < ApplicationController
   def update
     course = Current.tenant.courses.find(params[:id])
 
-    cp = course_params.to_h
-    has_thumb_key = cp.key?("thumbnail_signed_id")
-    signed_id = cp["thumbnail_signed_id"].to_s
-
-    ActiveRecord::Base.transaction do
-      # Update non-file fields
-      unless course.update(cp.except("thumbnail_signed_id"))
-        raise ActiveRecord::Rollback
-      end
-
-      # Only touch attachment if the client sent the key at all
-      if has_thumb_key
-        if signed_id.present?
-          course.thumbnail.attach(signed_id)
-        else
-          course.thumbnail.purge if course.thumbnail.attached?
-        end
-      end
-    end
-
-    course.reload
+    UpdateCourse.new(course: course, params: course_params.to_h).call
 
     if course.errors.empty?
       render json: course_fetch_results(course, course.instructors), status: :ok
