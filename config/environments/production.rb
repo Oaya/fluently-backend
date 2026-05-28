@@ -62,11 +62,11 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = true
   config.action_mailer.smtp_settings = {
     address: "in-v3.mailjet.com",
-    port: 465,
+    port: 587,
     user_name: ENV["MAILJET_API_KEY"],
     password: ENV["MAILJET_SECRET_KEY"],
     authentication: :plain,
-    ssl: true,
+    enable_starttls_auto: true,
     open_timeout: 10,
     read_timeout: 10
   }
