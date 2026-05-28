@@ -10,9 +10,9 @@ module Api
 
         if resource.errors.empty?
           resource.update!(status: "active")
-          redirect_to "#{frontend_url}/confirm-email?status=success"
+          redirect_to "#{frontend_url}/confirm-email?status=success", allow_other_host: true
         else
-          redirect_to "#{frontend_url}/confirm-email?status=error"
+          redirect_to "#{frontend_url}/confirm-email?status=error", allow_other_host: true
         end
       end
     end
