@@ -63,9 +63,9 @@ Rails.application.configure do
     user_name: ENV["MAILJET_API_KEY"],
     password: ENV["MAILJET_SECRET_KEY"],
     address: "in-v3.mailjet.com",
-    port: 587,
+    port: 465,
     authentication: :plain,
-    enable_starttls_auto: true
+    tls: true
   }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
