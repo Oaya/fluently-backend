@@ -55,17 +55,20 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "e-learning-app-backend-novo.onrender.com", protocol: "https" }
+  config.action_mailer.default_url_options = { host: "https://e-learning-app-backend-novo.onrender.com", protocol: "https" }
 
   # Mailjet SMTP for transactional email
   config.action_mailer.delivery_method = :smtp
+  config.action_mailer.raise_delivery_errors = true
   config.action_mailer.smtp_settings = {
     address: "in-v3.mailjet.com",
+    port: 587,
     user_name: ENV["MAILJET_API_KEY"],
     password: ENV["MAILJET_SECRET_KEY"],
-    port: 587,
     authentication: :plain,
-    enable_starttls_auto: true
+    enable_starttls_auto: true,
+    open_timeout: 10,
+    read_timeout: 10
   }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
