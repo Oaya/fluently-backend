@@ -152,6 +152,12 @@ GEM
       tzinfo
     faker (3.6.0)
       i18n (>= 1.8.11, < 2)
+    faraday (2.14.2)
+      faraday-net_http (>= 2.0, < 3.5)
+      json
+      logger
+    faraday-net_http (3.4.3)
+      net-http (~> 0.5)
     ffi (1.17.2-aarch64-linux-gnu)
     ffi (1.17.2-aarch64-linux-musl)
     ffi (1.17.2-arm-linux-gnu)
@@ -206,6 +212,11 @@ GEM
       net-imap
       net-pop
       net-smtp
+    mailjet (1.8.3)
+      activesupport (>= 5.0.0)
+      faraday (~> 2.1)
+      rack (>= 1.4.0)
+      yajl-ruby
     marcel (1.1.0)
     mini_magick (5.3.1)
       logger
@@ -214,6 +225,8 @@ GEM
       drb (~> 2.0)
       prism (~> 1.5)
     msgpack (1.8.0)
+    net-http (0.9.1)
+      uri (>= 0.11.1)
     net-imap (0.6.4)
       date
       net-protocol
@@ -411,6 +424,7 @@ GEM
       base64
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
+    yajl-ruby (1.4.3)
     zeitwerk (2.8.2)
 
 PLATFORMS
@@ -440,6 +454,7 @@ DEPENDENCIES
   image_processing (~> 1.2)
   jsonapi-serializer
   kamal
+  mailjet
   nokogiri (>= 1.19.3)
   overcommit
   pg (~> 1.1)
