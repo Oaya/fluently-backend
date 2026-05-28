@@ -43,14 +43,14 @@ Rails.application.configure do
   config.action_mailer.smtp_settings = {
     address: "in-v3.mailjet.com",
     port: 587,
-    user_name: Rails.application.credentials.dig(:mailjet, :api_key),
-    password: Rails.application.credentials.dig(:mailjet, :secret_key),
+    user_name: ENV["MAILJET_API_KEY"],
+    password: ENV["MAILJET_SECRET_KEY"],
     authentication: :plain,
     enable_starttls_auto: true
   }
 
   # Set localhost to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  config.action_mailer.default_url_options = { host: "localhost", port: 3001 }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log

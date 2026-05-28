@@ -5,8 +5,10 @@ class User < ApplicationRecord
 
   belongs_to :tenant
   has_one :membership, dependent: :destroy
+  has_one :owned_tenant, class_name: "Tenant", foreign_key: "billing_owner_id", dependent: :nullify
   has_one_attached :avatar
-  has_many :enrollments
+  has_many :enrollments, dependent: :destroy
+  has_many :course_instructors, foreign_key: :instructor_id, dependent: :destroy
 
   validates :first_name, :last_name, :email, :tenant_id, presence: true
   validates :email, uniqueness: { case_sensitive: false }

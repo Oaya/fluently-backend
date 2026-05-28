@@ -1,6 +1,6 @@
 class Api::StripeWebhooksController < ApplicationController
   def receive
-    endpoint_secret = Rails.application.credentials.dig(:stripe, :webhook_secret)
+    endpoint_secret = ENV["STRIPE_WEBHOOK_SECRET"]
     return render_error("Missing Stripe webhook secret", :internal_server_error) if endpoint_secret.blank?
 
     payload = request.raw_post

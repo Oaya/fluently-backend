@@ -1,6 +1,6 @@
 class Subscriptions
   def checkout_session(plan, user)
-    Stripe.api_key = Rails.application.credentials.dig(:stripe, :secret_key)
+    Stripe.api_key = ENV["STRIPE_SECRET_KEY"]
     unless plan
       return render_error("Invalid plan: #{params[:plan]}", :unprocessable_entity)
     end
@@ -11,7 +11,7 @@ class Subscriptions
       name: "#{user.first_name} #{user.last_name}",
       metadata: { tenant_id: user.tenant.id }
     )
-    frontend = Rails.application.credentials[:frontend_url] || "http://localhost:5173"
+    frontend = Rails.application.credentials[:frontend_url] || "http://localhost:5174"
 
     # Put signup info into metadata so you can create the user after payment is successful in the webhook
     begin
@@ -45,7 +45,7 @@ class Subscriptions
     else
       # For paid plan, cancel the subscription in Stripe and update the tenant cancel_at_period_end to true
       if tenant.stripe_subscription_id.present?
-        Stripe.api_key = Rails.application.credentials.dig(:stripe, :secret_key)
+        Stripe.api_key = ENV["STRIPE_SECRET_KEY"]
         begin
           Stripe::Subscription.update(
             tenant.stripe_subscription_id,
@@ -67,7 +67,7 @@ class Subscriptions
       return render_error("Invalid plan: #{params[:plan]}", :unprocessable_entity)
     end
 
-    Stripe.api_key = Rails.application.credentials.dig(:stripe, :secret_key)
+    Stripe.api_key = ENV["STRIPE_SECRET_KEY"]
 
     # if the new plan is free, just update the tenant's plan and status, and cancel the subscription in Stripe if exists
     if new_plan.name == "basic"

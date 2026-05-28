@@ -6,7 +6,7 @@ module Api
       def show
         self.resource = resource_class.confirm_by_token(params[:confirmation_token])
 
-        frontend_url = Rails.application.credentials.frontend_url || "http://localhost:3000"
+        frontend_url = ENV.fetch("FRONTEND_URL", "http://localhost:5174")
 
         if resource.errors.empty?
           resource.update!(status: "active")

@@ -37,21 +37,25 @@ class Api::UsersController < ApplicationController
 
   # DELETE /api/users/bulk_delete
   def bulk_delete
-    pp params
     user_ids = user_delete_params[:user_ids] || []
     unless user_ids.is_a?(Array)
       return render_error("user_ids must be an array", status: :bad_request)
     end
 
-    # Only delete users within the current tenant
-    users = Current.tenant.users.where(id: user_ids)
+    users = Current.tenant.users.where(id: user_ids).where.not(id: current_api_user.id)
+    ids = users.pluck(:id)
 
-    # Prevent self-deletion
-    users = users.where.not(id: current_api_user.id)
+    # Nullify billing_owner_id if any deleted user is the billing owner
+    if ids.include?(Current.tenant.billing_owner_id)
+      Current.tenant.update_column(:billing_owner_id, nil)
+    end
 
-    # Delete memberships and users
-    # (dependent: :destroy could handle this, but being explicit here)
-    Membership.where(user_id: users.pluck(:id)).delete_all
+    # Delete lesson_progresses → enrollments → course_instructors → memberships → users
+    enrollment_ids = Enrollment.where(user_id: ids).pluck(:id)
+    LessonProgress.where(enrollment_id: enrollment_ids).delete_all
+    Enrollment.where(id: enrollment_ids).delete_all
+    CourseInstructor.where(instructor_id: ids).delete_all
+    Membership.where(user_id: ids).delete_all
     deleted_count = users.delete_all
 
     render json: { deleted_count: deleted_count }, status: :ok

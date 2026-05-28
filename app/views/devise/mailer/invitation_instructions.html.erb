@@ -1,6 +1,6 @@
 <% role = @resource.membership&.role %>
 <% tenant_name = @resource.tenant&.name || Rails.application.class.module_parent_name %>
-<% frontend = ENV.fetch(Rails.application.credentials.frontend_url, "http://localhost:5173") %>
+<% frontend = ENV.fetch("FRONTEND_URL") %>
 <% accept_url = "#{frontend}/accept-invite?invitation_token=#{@token}&tenant=#{ERB::Util.url_encode(@resource.tenant.name)}" %>
 
 <% if role == "admin" %>

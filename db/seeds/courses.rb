@@ -98,7 +98,7 @@ courses_data = [
               ```
               bin/rails server
               ```
-              Visit `http://localhost:3000` in your browser. You should see the Rails welcome page.
+              Visit `http://localhost:3001` in your browser. You should see the Rails welcome page.
 
               **Generating a Resource**
               Rails provides generators to scaffold common patterns quickly:
@@ -107,7 +107,7 @@ courses_data = [
               bin/rails db:migrate
               ```
 
-              This creates the model, migration, controller, views, and routes for a `Post` resource all at once. Visit `http://localhost:3000/posts` to see the generated CRUD interface.
+              This creates the model, migration, controller, views, and routes for a `Post` resource all at once. Visit `http://localhost:3001/posts` to see the generated CRUD interface.
 
               From here you can customise the generated code to match your specific requirements. This scaffold gives you a solid starting point that you can iterate on rather than writing everything from scratch.
             ARTICLE

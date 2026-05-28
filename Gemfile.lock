@@ -131,6 +131,9 @@ GEM
       actionmailer (>= 5.0)
       devise (>= 4.6)
     dotenv (3.2.0)
+    dotenv-rails (3.2.0)
+      dotenv (= 3.2.0)
+      railties (>= 6.1)
     drb (2.2.3)
     dry-auto_inject (1.1.0)
       dry-core (~> 1.1)
@@ -432,6 +435,7 @@ DEPENDENCIES
   devise
   devise-jwt
   devise_invitable
+  dotenv-rails
   faker
   image_processing (~> 1.2)
   jsonapi-serializer

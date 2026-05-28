@@ -60,12 +60,12 @@ Rails.application.configure do
   # Mailjet SMTP for transactional email
   config.action_mailer.delivery_method = :smtp
   config.action_mailer.smtp_settings = {
+    address: "in-v3.mailjet.com",
     user_name: ENV["MAILJET_API_KEY"],
     password: ENV["MAILJET_SECRET_KEY"],
-    address: "in-v3.mailjet.com",
-    port: 465,
+    port: 587,
     authentication: :plain,
-    tls: true
+    enable_starttls_auto: true
   }
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
