@@ -71,18 +71,17 @@ class Subscriptions
 
     # if the new plan is free, just update the tenant's plan and status, and cancel the subscription in Stripe if exists
     if new_plan.name == "basic"
-      begin
-        Stripe::Subscription.update(
-          tenant.stripe_subscription_id,
-          {
-            cancel_at_period_end: true
-          }
-        )
-      rescue Stripe::StripeError => e
-        return render_error(e.message, :bad_request)
+      if tenant.stripe_subscription_id.present?
+        begin
+          Stripe::Subscription.update(
+            tenant.stripe_subscription_id,
+            { cancel_at_period_end: true }
+          )
+        rescue Stripe::StripeError => e
+          return render_error(e.message, :bad_request)
+        end
       end
       tenant.update(plan: new_plan, cancel_at_period_end: false, status: "active")
-      pp tenant
       { message: "Plan changed successfully" }
     else
       # if there in no existing subscription, need to create a new subscription in Strip, and let frontend to handle the payment flow by redirecting to the checkout page
