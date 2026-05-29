@@ -17,7 +17,7 @@ class Subscriptions
     begin
       session = Stripe::Checkout::Session.create(
         ui_mode: "embedded",
-        mode: "subscription",
+        mode: "payment",
         customer: customer.id,
         line_items: [ { price: plan.stripe_price_id, quantity: 1 } ],
         return_url: "#{frontend}/admin/dashboard",
