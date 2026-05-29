@@ -1,12 +1,13 @@
 class CreateCourse
   def initialize(tenant:, params:)
     @tenant = tenant
-    @course_data = params.except(:instructor_ids)
+    @course_data = params.except(:instructor_ids, :thumbnail_signed_id)
     @instructor_ids = params[:instructor_ids] || []
     @signed_id =  params[:thumbnail_signed_id].to_s
   end
 
   def call
+    pp @signed_id
     @course = @tenant.courses.new(@course_data)
     max = @tenant.plan.features["max_courses"]
 

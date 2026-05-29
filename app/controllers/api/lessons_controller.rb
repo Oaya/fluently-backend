@@ -24,7 +24,7 @@ class  Api::LessonsController < ApplicationController
   def create
     section = Current.tenant.sections.find(params[:section_id])
 
-    lesson = new CreateLesson(
+    lesson = CreateLesson.new(
       tenant: Current.tenant,
       params: lesson_params.to_h,  # normalize keys
       section: section
