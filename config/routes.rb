@@ -43,6 +43,7 @@ Rails.application.routes.draw do
       end
       member do
         get :overview
+        get :enrollments, to: "enrollments#course"
         patch :price
         patch :publish
       end

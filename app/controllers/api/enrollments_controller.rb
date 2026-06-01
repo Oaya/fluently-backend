@@ -1,5 +1,6 @@
 class  Api::EnrollmentsController < ApplicationController
   before_action :authenticate_api_user!
+    before_action :require_admin!, only: [ :course ]
 
   def start
     enrollment = Enrollment.find_by(id: params[:id], user: current_api_user)
@@ -23,5 +24,18 @@ class  Api::EnrollmentsController < ApplicationController
 
     lesson_progress.update!(status: :completed, progress: 100)
     render json: { message: "Lesson completed" }, status: :ok
+  end
+
+  # GET /api/courses/:id/enrollments
+  def course
+    enrollments = Current.tenant.enrollments.includes(:user).where(course_id: params[:id])
+
+    render json: enrollments.map { |e|
+      e.as_json(only: [ :course_id, :status ]).merge(
+        user: e.user.as_json(only: [ :id, :first_name, :last_name ]).merge(
+          avatar: e.user.avatar.attached? ? rails_blob_url(e.user.avatar, host: request.base_url) : nil
+        )
+      )
+    }
   end
 end

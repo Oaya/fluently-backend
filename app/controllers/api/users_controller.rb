@@ -1,6 +1,6 @@
 class Api::UsersController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin_or_instructor!, only: [ :index, :courses, :instructors ]
+  before_action :require_admin_or_instructor!, only: [ :index, :instructors ]
   before_action :require_admin!, :require_active_tenant!, only: [  :bulk_delete ]
 
   # GET /api/users
@@ -62,19 +62,23 @@ class Api::UsersController < ApplicationController
   end
 
   # GET /api/users/:id/courses
-  # 1. get courses as instructor.
-
   def courses
     user = Current.tenant.users.find(params[:id])
-    courses_as_instructor = Current.tenant
-      .courses
-      .joins(:course_instructors)
-      .where(course_instructors: { instructor_id: user.id })
-      .distinct
-      .order(created_at: :desc)
 
+    if user.membership.role == "instructor"
+      courses_as_role = Current.tenant
+        .courses
+        .joins(:course_instructors)
+        .where(course_instructors: { instructor_id: user.id })
+        .distinct
+        .order(created_at: :desc)
+    elsif user.membership.role == "admin"
+      courses_as_role = Current.tenant.courses
+    else
+      courses_as_role = Current.tenant.courses.joins(:enrollments).where(enrollments: { user_id: params[:id] })
+    end
 
-    render json: courses_as_instructor.map { |course|
+    render json: courses_as_role.map { |course|
       {
         id: course.id,
         title: course.title,
