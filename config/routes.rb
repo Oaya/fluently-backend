@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  get "/", to: proc { [200, {}, ["OK"]] }
+  get "/", to: proc { [ 200, {}, [ "OK" ] ] }
 
   namespace :api, defaults: { format: :json } do
     devise_for :users,
