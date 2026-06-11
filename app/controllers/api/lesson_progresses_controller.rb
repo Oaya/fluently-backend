@@ -25,7 +25,7 @@ class Api::LessonProgressesController < ApplicationController
   def set_lesson_progress
     @lesson_progress = LessonProgress
       .joins(:enrollment)
-      .where(enrollments: { tenant_id: Current.tenant.id, user_id: current_api_user.id })
+      .where(enrollments: { user_id: current_api_user.id })
       .find(params[:id])
   end
 

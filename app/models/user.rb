@@ -3,24 +3,23 @@ class User < ApplicationRecord
 
   attr_accessor :invited_courses
 
-  belongs_to :tenant
-  has_one :membership, dependent: :destroy
-  has_one :owned_tenant, class_name: "Tenant", foreign_key: "billing_owner_id", dependent: :nullify
   has_one_attached :avatar
   has_many :enrollments, dependent: :destroy
   has_many :course_instructors, foreign_key: :instructor_id, dependent: :destroy
+  belongs_to :plan, optional: true
 
-  validates :first_name, :last_name, :email, :tenant_id, presence: true
+  validates :first_name, :last_name, :email, :role, presence: true
   validates :email, uniqueness: { case_sensitive: false }
   validates :status, presence: true
+  validates :stripe_subscription_id, uniqueness: true, allow_nil: true
+  validates :stripe_customer_id, uniqueness: true, allow_nil: true
 
-  # # Add scopes for filters
   scope :filter_by_status, ->(status) do
     status.present? ? where(status: status.split(",")) : all
   end
 
   scope :filter_by_role, ->(role) {
-    role.present? ? joins(:membership).where(memberships: { role: role.split(",") }) : all
+    role.present? ? where(role: role.split(",")) : all
   }
 
   scope :filter_by_search, ->(value) {
@@ -32,15 +31,18 @@ class User < ApplicationRecord
     end
   }
 
-
   enum :status, {
     active: "active",
     inactive: "inactive",
     invited: "invited"
   }, validate: true
 
+  enum :role, {
+    admin: "admin",
+    instructor: "instructor",
+    student: "student"
+  }, validate: true
 
-  # This add devise api with users
   devise :invitable,
       :database_authenticatable,
       :registerable,

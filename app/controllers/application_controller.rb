@@ -1,5 +1,5 @@
 class ApplicationController < ActionController::API
-  before_action :set_current_user_tenant_plan, unless: :devise_controller?
+  before_action :set_current_user, unless: :devise_controller?
 
   private
 
@@ -8,34 +8,24 @@ class ApplicationController < ActionController::API
     render json: { error: msg }, status: status
   end
 
-
-  def set_current_user_tenant_plan
+  def set_current_user
     return unless current_api_user
 
     Current.user = current_api_user
-    Current.tenant = current_api_user&.tenant
-    Current.plan = Current.tenant&.plan
-
-    return if Current.tenant.present?
-
-    render_error("Tenant required", status: :forbidden)
   end
 
   def require_admin!
     user = current_api_user
     return render_error("Unauthorized", status: :unauthorized) unless user
-
-    role = user.membership&.role.to_s.downcase
-    return if role == "admin"
+    return if user.role == "admin"
 
     render_error("No permission to access", status: :forbidden)
   end
 
   def require_billing_owner!
     user = current_api_user
-    tenant = Current.tenant
-    return render_error("Unauthorized", status: :unauthorized) unless user && tenant
-    return if tenant.billing_owner_id == user.id
+    return render_error("Unauthorized", status: :unauthorized) unless user
+    return if user.role == "admin"
 
     render_error("No permission to access", status: :forbidden)
   end
@@ -43,27 +33,19 @@ class ApplicationController < ActionController::API
   def require_admin_or_instructor!
     user = current_api_user
     return render_error("Unauthorized", status: :unauthorized) unless user
-
-    role = user.membership&.role.to_s.downcase
-    pp role
-    return if role == "admin" || role == "instructor"
+    return if user.role == "admin" || user.role == "instructor"
 
     render_error("No permission to access", status: :forbidden)
   end
 
-  def require_active_tenant!
-    tenant = Current.tenant
-    return render_error("Tenant required", status: :forbidden) unless tenant
+  def require_active_subscription!
+    user = current_api_user
+    status = user.subscription_status.to_s
+    return if status.blank? || status == "active"
 
-    status = tenant.status.to_s
-
-    return if status == "active"
-
-    # billing owner should have access even if tenant is not active, so they can update payment info
-    if tenant.billing_owner_id == Current.user.id
-      render_error("Tenant is #{status}. Please update payment information to reactivate subscription.", status: :payment_required)
-    else
-      render_error("Tenant is #{status}. Please contact billing owner to update payment information.", status: :payment_required)
-    end
+    render_error(
+      "Subscription is #{status}. Please update payment information to reactivate subscription.",
+      status: :payment_required
+    )
   end
 end

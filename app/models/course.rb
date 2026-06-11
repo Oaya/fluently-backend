@@ -1,5 +1,4 @@
 class Course < ApplicationRecord
-  belongs_to :tenant
   has_many :sections, dependent: :destroy
   has_many :course_instructors, dependent: :destroy
   has_many :instructors, through: :course_instructors, source: :instructor

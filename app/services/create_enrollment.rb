@@ -1,21 +1,14 @@
 class CreateEnrollment
-    def initialize(user:, course:, tenant:)
-      @user = user
-      @course = course
-      @tenant = tenant
-    end
+  def initialize(user:, course:)
+    @user = user
+    @course = course
+  end
 
-    def call
-      Enrollment.transaction do
-        enrollment = Enrollment.find_or_create_by!(
-          user: @user,
-          course: @course,
-          tenant: @tenant
-        ) do |e|
-          e.status = :enrolled
-        end
-
-        enrollment
+  def call
+    Enrollment.transaction do
+      Enrollment.find_or_create_by!(user: @user, course: @course) do |e|
+        e.status = :enrolled
       end
     end
+  end
 end

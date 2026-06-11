@@ -19,7 +19,6 @@ class SeedLessonProgressJob < ApplicationJob
         {
           enrollment_id: enrollment.id,
           lesson_id: lesson.id,
-          tenant_id: enrollment.tenant_id,
           status: "not_started",
           progress: 0,
           created_at: now,

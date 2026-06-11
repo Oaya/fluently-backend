@@ -1,4 +1,3 @@
-# app/controllers/api/active_storage/direct_uploads_controller.rb
 module Api
   module ActiveStorage
     class DirectUploadsController < ApplicationController
@@ -8,7 +7,7 @@ module Api
         type_prefix = params[:kind].to_s
 
         base_key = ::ActiveStorage::Blob.generate_unique_secure_token
-        custom_key = "tenants/#{Current.tenant.id}/#{type_prefix}/#{base_key}"
+        custom_key = "users/#{Current.user.id}/#{type_prefix}/#{base_key}"
 
         blob = ::ActiveStorage::Blob.create_before_direct_upload!(
           filename: params[:filename],

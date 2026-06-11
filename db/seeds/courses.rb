@@ -1,5 +1,4 @@
-tenant = Tenant.find_by!(name: "Test Tenant")
-instructor = tenant.users.joins(:membership).where(memberships: { role: "instructor" }).first
+instructor = User.where(role: "instructor").first
 
 courses_data = [
   {
@@ -638,7 +637,7 @@ courses_data = [
 courses_data.each do |course_data|
   sections_data = course_data.delete(:sections)
 
-  course = tenant.courses.create!(course_data)
+  course = Course.create!(course_data)
   CourseInstructor.create!(course: course, instructor: instructor) if instructor
 
   sections_data.each_with_index do |section_data, section_index|
@@ -647,18 +646,16 @@ courses_data.each do |course_data|
     section = Section.create!(
       **section_data,
       course: course,
-      tenant: tenant,
       position: section_index + 1
     )
 
     lessons_data.each do |lesson_data|
       Lesson.create!(
         **lesson_data,
-        section: section,
-        tenant: tenant
+        section: section
       )
     end
   end
 end
 
-pp "Created #{Course.count} courses with sections and lessons for tenant #{tenant.name}"
+pp "Created #{Course.count} courses with sections and lessons"

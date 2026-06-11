@@ -1,14 +1,12 @@
 class CreateLesson
-  def initialize(tenant:, params:, section:)
-    @tenant = tenant
+  def initialize(params:, section:)
     @lesson_data = params.except(:video_signed_id)
-    @signed_id =  params[:video_signed_id].to_s
+    @signed_id = params[:video_signed_id].to_s
     @section = section
   end
 
   def call
-    @lesson = @section.lessons.new(@lesson_data.merge("tenant" => @tenant))
-
+    @lesson = @section.lessons.new(@lesson_data)
     @lesson.save
     handle_video
 

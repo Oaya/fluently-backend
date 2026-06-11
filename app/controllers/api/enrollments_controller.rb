@@ -1,6 +1,7 @@
-class  Api::EnrollmentsController < ApplicationController
+class Api::EnrollmentsController < ApplicationController
   before_action :authenticate_api_user!
-    before_action :require_admin!, only: [ :course ]
+  before_action :require_admin!, only: [ :course ]
+  include Rails.application.routes.url_helpers
 
   def start
     enrollment = Enrollment.find_by(id: params[:id], user: current_api_user)
@@ -28,7 +29,7 @@ class  Api::EnrollmentsController < ApplicationController
 
   # GET /api/courses/:id/enrollments
   def course
-    enrollments = Current.tenant.enrollments.includes(:user).where(course_id: params[:id])
+    enrollments = Enrollment.includes(:user).where(course_id: params[:id])
 
     render json: enrollments.map { |e|
       e.as_json(only: [ :course_id, :status ]).merge(

@@ -1,7 +1,6 @@
 class Enrollment < ApplicationRecord
   belongs_to :user
   belongs_to :course
-  belongs_to :tenant
 
   has_many :lesson_progresses, dependent: :destroy
 

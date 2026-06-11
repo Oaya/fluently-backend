@@ -1,5 +1,4 @@
 class Lesson < ApplicationRecord
-  belongs_to :tenant
   belongs_to :section
   has_many :lesson_progresses, dependent: :destroy
   has_one_attached :video

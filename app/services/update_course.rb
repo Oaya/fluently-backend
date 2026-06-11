@@ -21,7 +21,7 @@ class UpdateCourse
   private
 
   def sync_instructors
-    instructors = User.where(id: @instructor_ids, tenant_id: @course.tenant_id)
+    instructors = User.where(id: @instructor_ids)
     @course.course_instructors.where.not(instructor_id: @instructor_ids).destroy_all
     instructors.each { |i| CourseInstructor.find_or_create_by(course: @course, instructor: i) }
   end

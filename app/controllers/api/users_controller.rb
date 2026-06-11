@@ -1,28 +1,26 @@
 class Api::UsersController < ApplicationController
   before_action :authenticate_api_user!
   before_action :require_admin_or_instructor!, only: [ :index, :instructors ]
-  before_action :require_admin!, :require_active_tenant!, only: [  :bulk_delete ]
+  before_action :require_admin!, :require_active_subscription!, only: [ :bulk_delete ]
+  include Rails.application.routes.url_helpers
 
   # GET /api/users
   def index
-    users = Current.tenant.users.filtering(filter_params).includes(:membership)
-
+    users = User.filtering(filter_params)
     users = users.order(sort_params) if sort_params.present?
 
-    render json: users.map { |user|
-      user_result(user)
-    }
+    render json: users.map { |user| user_result(user) }
   end
 
   # GET /api/users/:id
   def show
-    user = Current.tenant.users.find(params[:id])
-      render json: user_result(user)
+    user = User.find(params[:id])
+    render json: user_result(user)
   end
 
   # GET /api/users/instructors
   def instructors
-    users = Current.tenant.users.joins(:membership).where(memberships: { role: :instructor }).order(first_name: :desc)
+    users = User.where(role: :instructor).order(first_name: :desc)
 
     render json: users.map { |user|
       {
@@ -42,20 +40,13 @@ class Api::UsersController < ApplicationController
       return render_error("user_ids must be an array", status: :bad_request)
     end
 
-    users = Current.tenant.users.where(id: user_ids).where.not(id: current_api_user.id)
+    users = User.where(id: user_ids).where.not(id: current_api_user.id)
     ids = users.pluck(:id)
 
-    # Nullify billing_owner_id if any deleted user is the billing owner
-    if ids.include?(Current.tenant.billing_owner_id)
-      Current.tenant.update_column(:billing_owner_id, nil)
-    end
-
-    # Delete lesson_progresses → enrollments → course_instructors → memberships → users
     enrollment_ids = Enrollment.where(user_id: ids).pluck(:id)
     LessonProgress.where(enrollment_id: enrollment_ids).delete_all
     Enrollment.where(id: enrollment_ids).delete_all
     CourseInstructor.where(instructor_id: ids).delete_all
-    Membership.where(user_id: ids).delete_all
     deleted_count = users.delete_all
 
     render json: { deleted_count: deleted_count }, status: :ok
@@ -63,32 +54,27 @@ class Api::UsersController < ApplicationController
 
   # GET /api/users/:id/courses
   def courses
-    user = Current.tenant.users.find(params[:id])
+    user = User.find(params[:id])
 
-    if user.membership.role == "instructor"
-      courses_as_role = Current.tenant
-        .courses
+    courses_as_role = if user.role == "instructor"
+      Course
         .joins(:course_instructors)
         .where(course_instructors: { instructor_id: user.id })
         .distinct
         .order(created_at: :desc)
-    elsif user.membership.role == "admin"
-      courses_as_role = Current.tenant.courses
+    elsif user.role == "admin"
+      Course.all
     else
-      courses_as_role = Current.tenant.courses.joins(:enrollments).where(enrollments: { user_id: params[:id] })
+      Course.joins(:enrollments).where(enrollments: { user_id: params[:id] })
     end
 
     render json: courses_as_role.map { |course|
-      {
-        id: course.id,
-        title: course.title,
-        published: course.published
-      }
+      { id: course.id, title: course.title, published: course.published }
     }
   end
 
   def enrollments
-    user = Current.tenant.users.find(params[:id])
+    user = User.find(params[:id])
     enrollments = user.enrollments.includes(:course).order(created_at: :desc)
 
     render json: enrollments.map { |enrollment|
@@ -96,7 +82,7 @@ class Api::UsersController < ApplicationController
         id: enrollment.id,
         status: enrollment.status,
         course: enrollment.course.as_json.merge(
-          thumbnail: enrollment.course.thumbnail.attached? ? rails_blob_url(enrollment.course.thumbnail, host: request.base_url) : nil # rubocop:disable Lint/Syntax
+          thumbnail: enrollment.course.thumbnail.attached? ? rails_blob_url(enrollment.course.thumbnail, host: request.base_url) : nil
         ),
         enrolled_at: enrollment.created_at
       }
@@ -104,8 +90,8 @@ class Api::UsersController < ApplicationController
   end
 
   def course_status
-    user = Current.tenant.users.find(params[:id])
-    course = Current.tenant.courses.find(params[:course_id])
+    user = User.find(params[:id])
+    course = Course.find(params[:course_id])
     enrollment = user.enrollments.find_by(course: course)
 
     unless enrollment
@@ -139,13 +125,13 @@ class Api::UsersController < ApplicationController
     permitted = params.permit(:search, :status)
 
     role = params[:role]
-    if role.present? && Membership.roles.key?(role)
+    allowed_roles = %w[admin instructor student]
+    if role.present? && allowed_roles.include?(role)
       permitted[:role] = role
     end
 
     permitted
   end
-
 
   def sort_params
     allowed = %w[first_name email status role]
@@ -153,8 +139,8 @@ class Api::UsersController < ApplicationController
     sort = params[:sort].to_s
 
     return nil if sort.blank?
-    parts = sort.split(",")
 
+    parts = sort.split(",")
     reordered = parts.sort_by do |part|
       field = part.delete_prefix("-")
       priority_order.index(field) || 999
@@ -163,11 +149,10 @@ class Api::UsersController < ApplicationController
     clauses = reordered.map do |p|
       dir = p.start_with?("-") ? "DESC" : "ASC"
       field = p.delete_prefix("-")
-
       next unless allowed.include?(field)
-
       "#{field} #{dir}"
     end.compact
+
     clauses.join(", ")
   end
 
@@ -181,7 +166,7 @@ class Api::UsersController < ApplicationController
       email: user.email,
       first_name: user.first_name,
       last_name: user.last_name,
-      role: Membership.roles[user.membership&.role],
+      role: user.role,
       created_at: user.created_at,
       status: User.statuses[user.status],
       avatar: user.avatar.attached? ? rails_blob_url(user.avatar, host: request.base_url) : nil

@@ -7,11 +7,9 @@ module Api
       def create
         email = sign_up_params[:email].to_s.downcase
 
-        # Check if the user exists or not
         exists_user = User.find_by(email: email)
 
         if exists_user
-          # if user is already confrimed then send error message that it can't use the email
           if exists_user.confirmed?
             render_error("Cannot register email #{email}", status: :unprocessable_entity)
             return
@@ -22,30 +20,26 @@ module Api
           end
         end
 
-        # If the user doesn't exists, signup with Tenant and plan
-        # find plan first
-        plan = Plan.find_by(name: tenant_params[:plan])
+        plan = Plan.find_by(name: plan_params[:plan])
 
         unless plan
           render_error("Invalid Plan", status: :unprocessable_entity)
           return
         end
 
+        subscription_status = plan.name == "free" ? "active" : "pending"
 
-        # create tenant, user and membership save user and send confirmation
-        user = nil
-        ActiveRecord::Base.transaction do
-          tenant_status = plan.name == "basic" ? "active" : "pending"
-          tenant = Tenant.create!(name: tenant_params[:tenant], plan: plan, status: tenant_status)
-
-          user = User.new(sign_up_params.merge(email: email, tenant: tenant, status: "invited"))
-          user.skip_confirmation_notification!
-          user.save!
-
-          tenant.update!(billing_owner_id: user.id)
-
-          Membership.create!(user: user, tenant: tenant, role: "admin")
-        end
+        user = User.new(
+          sign_up_params.merge(
+            email: email,
+            role: "admin",
+            plan: plan,
+            subscription_status: subscription_status,
+            status: "invited"
+          )
+        )
+        user.skip_confirmation_notification!
+        user.save!
 
         begin
           user.send_confirmation_instructions
@@ -55,28 +49,18 @@ module Api
 
         render json: { message: "Confirmation instruction sent to #{email}" }, status: :created
 
-
       rescue ActiveRecord::RecordInvalid => e
-          render_error(e.record.errors.full_messages, status: :unprocessable_entity)
+        render_error(e.record.errors.full_messages, status: :unprocessable_entity)
       end
 
       private
 
       def sign_up_params
-        params.permit(
-          :email,
-          :password,
-          :password_confirmation,
-          :first_name,
-          :last_name
-        )
+        params.permit(:email, :password, :password_confirmation, :first_name, :last_name)
       end
 
-      def tenant_params
-        params.permit(
-          :tenant,
-          :plan
-        )
+      def plan_params
+        params.permit(:plan)
       end
     end
   end

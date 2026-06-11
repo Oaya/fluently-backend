@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_28_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_11_164349) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -59,10 +59,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_000000) do
     t.string "level"
     t.decimal "price", precision: 10, scale: 2
     t.boolean "published", default: false
-    t.uuid "tenant_id", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index ["tenant_id"], name: "index_courses_on_tenant_id"
   end
 
   create_table "enrollments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -70,12 +68,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_000000) do
     t.datetime "created_at", null: false
     t.uuid "last_accessed_lesson_id"
     t.string "status", default: "enrolled", null: false
-    t.uuid "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
     t.index ["course_id"], name: "index_enrollments_on_course_id"
-    t.index ["tenant_id", "user_id", "course_id"], name: "index_enrollments_on_tenant_id_and_user_id_and_course_id", unique: true
-    t.index ["tenant_id"], name: "index_enrollments_on_tenant_id"
+    t.index ["user_id", "course_id"], name: "index_enrollments_on_user_id_and_course_id", unique: true
     t.index ["user_id"], name: "index_enrollments_on_user_id"
   end
 
@@ -85,13 +81,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_000000) do
     t.uuid "lesson_id", null: false
     t.integer "progress", default: 0, null: false
     t.string "status", default: "not_started", null: false
-    t.uuid "tenant_id", null: false
     t.datetime "updated_at", null: false
     t.integer "watched_seconds", default: 0, null: false
     t.index ["enrollment_id", "lesson_id"], name: "index_lesson_progresses_on_enrollment_and_lesson", unique: true
     t.index ["enrollment_id", "lesson_id"], name: "index_lesson_progresses_on_enrollment_id_and_lesson_id", unique: true
     t.index ["lesson_id"], name: "index_lesson_progresses_on_lesson_id"
-    t.index ["tenant_id"], name: "index_lesson_progresses_on_tenant_id"
   end
 
   create_table "lessons", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -102,22 +96,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_000000) do
     t.string "lesson_type", null: false
     t.integer "position", null: false
     t.uuid "section_id", null: false
-    t.uuid "tenant_id", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["section_id", "position"], name: "index_lessons_on_section_id_and_position", unique: true
     t.index ["section_id"], name: "index_lessons_on_section_id"
-    t.index ["tenant_id"], name: "index_lessons_on_tenant_id"
-  end
-
-  create_table "memberships", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "role", null: false
-    t.uuid "tenant_id", null: false
-    t.datetime "updated_at", null: false
-    t.uuid "user_id", null: false
-    t.index ["tenant_id"], name: "index_memberships_on_tenant_id"
-    t.index ["user_id"], name: "index_memberships_on_user_id"
   end
 
   create_table "plans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -134,35 +116,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_000000) do
     t.datetime "created_at", null: false
     t.text "description", null: false
     t.integer "position", null: false
-    t.uuid "tenant_id", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["course_id", "position"], name: "index_sections_on_course_id_and_position", unique: true
     t.index ["course_id"], name: "index_sections_on_course_id"
-    t.index ["tenant_id"], name: "index_sections_on_tenant_id"
-  end
-
-  create_table "tenants", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.uuid "billing_owner_id"
-    t.boolean "cancel_at_period_end"
-    t.datetime "created_at", null: false
-    t.datetime "current_period_end"
-    t.string "name", null: false
-    t.uuid "plan_id", null: false
-    t.string "status", default: "inactive", null: false
-    t.string "stripe_customer_id"
-    t.string "stripe_subscription_id"
-    t.datetime "updated_at", null: false
-    t.index ["billing_owner_id"], name: "index_tenants_on_billing_owner_id"
-    t.index ["plan_id"], name: "index_tenants_on_plan_id"
-    t.index ["status"], name: "index_tenants_on_status"
   end
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.boolean "cancel_at_period_end"
     t.datetime "confirmation_sent_at"
     t.string "confirmation_token"
     t.datetime "confirmed_at"
     t.datetime "created_at", null: false
+    t.datetime "current_period_end"
     t.string "email", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "first_name", null: false
@@ -175,10 +141,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_000000) do
     t.bigint "invited_by_id"
     t.string "invited_by_type"
     t.string "last_name", null: false
+    t.uuid "plan_id"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
+    t.string "role", default: "student", null: false
     t.string "status", default: "active", null: false
-    t.uuid "tenant_id", null: false
+    t.string "stripe_customer_id"
+    t.string "stripe_subscription_id"
+    t.string "subscription_status"
     t.string "unconfirmed_email"
     t.datetime "updated_at", null: false
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
@@ -186,29 +156,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_000000) do
     t.index ["invitation_token"], name: "index_users_on_invitation_token", unique: true
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
     t.index ["invited_by_type", "invited_by_id"], name: "index_users_on_invited_by"
+    t.index ["plan_id"], name: "index_users_on_plan_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
-    t.index ["tenant_id"], name: "index_users_on_tenant_id"
+    t.index ["role"], name: "index_users_on_role"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "course_instructors", "courses"
   add_foreign_key "course_instructors", "users", column: "instructor_id"
-  add_foreign_key "courses", "tenants"
   add_foreign_key "enrollments", "courses"
   add_foreign_key "enrollments", "lessons", column: "last_accessed_lesson_id"
-  add_foreign_key "enrollments", "tenants"
   add_foreign_key "enrollments", "users"
   add_foreign_key "lesson_progresses", "enrollments"
   add_foreign_key "lesson_progresses", "lessons"
-  add_foreign_key "lesson_progresses", "tenants"
   add_foreign_key "lessons", "sections"
-  add_foreign_key "lessons", "tenants"
-  add_foreign_key "memberships", "tenants"
-  add_foreign_key "memberships", "users"
   add_foreign_key "sections", "courses"
-  add_foreign_key "sections", "tenants"
-  add_foreign_key "tenants", "plans"
-  add_foreign_key "tenants", "users", column: "billing_owner_id", on_delete: :nullify
-  add_foreign_key "users", "tenants"
+  add_foreign_key "users", "plans"
 end

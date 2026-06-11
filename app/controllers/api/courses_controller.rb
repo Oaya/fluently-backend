@@ -1,11 +1,11 @@
-class  Api::CoursesController < ApplicationController
+class Api::CoursesController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin!, :require_active_tenant!, only: [ :create, :update, :destroy, :price, :publish ]
+  before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy, :price, :publish ]
   include Rails.application.routes.url_helpers
 
   # GET /api/courses
   def index
-    courses = Current.tenant.courses.order(created_at: :desc)
+    courses = Course.order(created_at: :desc)
     render json: courses.map { |course|
       course.as_json.merge(
         thumbnail: course.thumbnail.attached? ? rails_blob_url(course.thumbnail, host: request.base_url) : nil
@@ -15,7 +15,7 @@ class  Api::CoursesController < ApplicationController
 
   # GET /api/courses/:id
   def show
-    course = Current.tenant.courses.includes(:instructors).find(params[:id])
+    course = Course.includes(:instructors).find(params[:id])
     render json: course.as_json.merge(
       thumbnail: course.thumbnail.attached? ? rails_blob_url(course.thumbnail, host: request.base_url) : nil,
       level: Course.levels[course.level],
@@ -34,12 +34,8 @@ class  Api::CoursesController < ApplicationController
 
   # POST /api/courses
   def create
-    course, instructors =
-      CreateCourse.new(
-        tenant: Current.tenant,
-        params: course_params.to_h
-      ).call
-    course.reload()
+    course, instructors = CreateCourse.new(params: course_params.to_h).call
+    course.reload
 
     if course.persisted? && course.errors.empty?
       render json: course_fetch_results(course, instructors), status: :created
@@ -50,7 +46,7 @@ class  Api::CoursesController < ApplicationController
 
   # PATCH /api/courses/:id
   def update
-    course = Current.tenant.courses.find(params[:id])
+    course = Course.find(params[:id])
 
     UpdateCourse.new(course: course, params: course_params.to_h).call
     course.reload
@@ -62,21 +58,20 @@ class  Api::CoursesController < ApplicationController
     end
   end
 
-
   # DELETE /api/courses/:id
   def destroy
-    course = Current.tenant.courses.find(params[:id])
+    course = Course.find(params[:id])
 
     if course.destroy!
       render status: :ok
     else
-      render_error(course.errors.full_messages,  status: :unprocessable_entity)
+      render_error(course.errors.full_messages, status: :unprocessable_entity)
     end
   end
 
   # GET /api/courses/:id/details
   def overview
-    course = Current.tenant.courses.includes(sections: :lessons, instructors: []).find(params[:id])
+    course = Course.includes(sections: :lessons, instructors: []).find(params[:id])
 
     render json: {
       id: course.id,
@@ -123,18 +118,18 @@ class  Api::CoursesController < ApplicationController
 
   # PATCH /api/courses/:id/price
   def price
-    course = Current.tenant.courses.find(params[:id])
+    course = Course.find(params[:id])
 
     if course.update(price: params.require(:price))
       render json: course_fetch_results(course, course.instructors), status: :ok
     else
-      render_error(course.errors.full_messages,  status: :unprocessable_entity)
+      render_error(course.errors.full_messages, status: :unprocessable_entity)
     end
   end
 
   # PATCH /api/courses/:id/publish
   def publish
-    course = Current.tenant.courses.find(params[:id])
+    course = Course.find(params[:id])
 
     if course.update(published: true)
       render json: course, status: :ok
@@ -145,6 +140,7 @@ class  Api::CoursesController < ApplicationController
 
 
   private
+
   def course_params
     params.permit(:title, :description, :category, :level, :thumbnail_signed_id, :published, instructor_ids: [])
   end
