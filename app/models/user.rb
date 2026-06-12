@@ -5,7 +5,6 @@ class User < ApplicationRecord
 
   has_one_attached :avatar
   has_many :enrollments, dependent: :destroy
-  has_many :course_instructors, foreign_key: :instructor_id, dependent: :destroy
   belongs_to :plan, optional: true
 
   validates :first_name, :last_name, :email, :role, presence: true
@@ -39,7 +38,6 @@ class User < ApplicationRecord
 
   enum :role, {
     admin: "admin",
-    instructor: "instructor",
     student: "student"
   }, validate: true
 

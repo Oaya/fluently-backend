@@ -106,14 +106,4 @@ class CourseTest < ActiveSupport::TestCase
       course.destroy
     end
   end
-
-  test "destroying course destroys its course_instructors" do
-    tenant = create_tenant
-    course = create_course(tenant: tenant)
-    instructor = create_user(tenant: tenant, email: "inst-#{SecureRandom.hex(4)}@example.com")
-    CourseInstructor.create!(course: course, instructor: instructor)
-    assert_difference "CourseInstructor.count", -1 do
-      course.destroy
-    end
-  end
 end

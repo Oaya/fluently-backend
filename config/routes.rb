@@ -26,7 +26,6 @@ Rails.application.routes.draw do
 
     resources :users, only: [ :index, :show, :update, :destroy ] do
       collection do
-        get :instructors
         delete :bulk_delete
       end
       member do

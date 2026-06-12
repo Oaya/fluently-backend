@@ -1,6 +1,6 @@
 class Api::UsersController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin_or_instructor!, only: [ :index, :instructors ]
+  before_action :require_admin, only: [ :index ]
   before_action :require_admin!, :require_active_subscription!, only: [ :bulk_delete ]
   include Rails.application.routes.url_helpers
 
@@ -18,21 +18,6 @@ class Api::UsersController < ApplicationController
     render json: user_result(user)
   end
 
-  # GET /api/users/instructors
-  def instructors
-    users = User.where(role: :instructor).order(first_name: :desc)
-
-    render json: users.map { |user|
-      {
-        id: user.id,
-        email: user.email,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        avatar: user.avatar.attached? ? rails_blob_url(user.avatar, host: request.base_url) : nil
-      }
-    }
-  end
-
   # DELETE /api/users/bulk_delete
   def bulk_delete
     user_ids = user_delete_params[:user_ids] || []
@@ -46,7 +31,6 @@ class Api::UsersController < ApplicationController
     enrollment_ids = Enrollment.where(user_id: ids).pluck(:id)
     LessonProgress.where(enrollment_id: enrollment_ids).delete_all
     Enrollment.where(id: enrollment_ids).delete_all
-    CourseInstructor.where(instructor_id: ids).delete_all
     deleted_count = users.delete_all
 
     render json: { deleted_count: deleted_count }, status: :ok
@@ -56,13 +40,7 @@ class Api::UsersController < ApplicationController
   def courses
     user = User.find(params[:id])
 
-    courses_as_role = if user.role == "instructor"
-      Course
-        .joins(:course_instructors)
-        .where(course_instructors: { instructor_id: user.id })
-        .distinct
-        .order(created_at: :desc)
-    elsif user.role == "admin"
+    courses_as_role = if user.role == "admin"
       Course.all
     else
       Course.joins(:enrollments).where(enrollments: { user_id: params[:id] })
@@ -125,7 +103,7 @@ class Api::UsersController < ApplicationController
     permitted = params.permit(:search, :status)
 
     role = params[:role]
-    allowed_roles = %w[admin instructor student]
+    allowed_roles = %w[admin student]
     if role.present? && allowed_roles.include?(role)
       permitted[:role] = role
     end

@@ -1,8 +1,7 @@
 class UpdateCourse
   def initialize(course:, params:)
     @course = course
-    @course_data = params.except(:instructor_ids, :thumbnail_signed_id)
-    @instructor_ids = params[:instructor_ids] || []
+    @course_data = params.except(:thumbnail_signed_id)
     @signed_id = params[:thumbnail_signed_id].to_s
     @has_thumb_key = params.key?(:thumbnail_signed_id)
   end
@@ -11,7 +10,6 @@ class UpdateCourse
     ActiveRecord::Base.transaction do
       raise ActiveRecord::Rollback unless @course.update(@course_data)
 
-      sync_instructors if @instructor_ids
       handle_thumbnail
     end
 
@@ -19,12 +17,6 @@ class UpdateCourse
   end
 
   private
-
-  def sync_instructors
-    instructors = User.where(id: @instructor_ids)
-    @course.course_instructors.where.not(instructor_id: @instructor_ids).destroy_all
-    instructors.each { |i| CourseInstructor.find_or_create_by(course: @course, instructor: i) }
-  end
 
   def handle_thumbnail
     return unless @has_thumb_key

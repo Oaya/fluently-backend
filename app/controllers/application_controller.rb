@@ -22,22 +22,6 @@ class ApplicationController < ActionController::API
     render_error("No permission to access", status: :forbidden)
   end
 
-  def require_billing_owner!
-    user = current_api_user
-    return render_error("Unauthorized", status: :unauthorized) unless user
-    return if user.role == "admin"
-
-    render_error("No permission to access", status: :forbidden)
-  end
-
-  def require_admin_or_instructor!
-    user = current_api_user
-    return render_error("Unauthorized", status: :unauthorized) unless user
-    return if user.role == "admin" || user.role == "instructor"
-
-    render_error("No permission to access", status: :forbidden)
-  end
-
   def require_active_subscription!
     user = current_api_user
     status = user.subscription_status.to_s

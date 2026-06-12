@@ -58,13 +58,12 @@ admin_user = User.create!(
 
 pp "Created admin user: #{admin_user.email}"
 
-10.times do
-  role = Faker::Boolean.boolean(true_ratio: 0.2) ? "instructor" : "student"
+2.times do
   User.create!(
     email: Faker::Internet.unique.email,
     first_name: Faker::Name.first_name,
     last_name: Faker::Name.last_name,
-    role: role,
+    role: "student",
     status: "active",
     password: "password",
     password_confirmation: "password",

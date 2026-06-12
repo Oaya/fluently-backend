@@ -19,7 +19,7 @@ class InviteUser
         email: @params[:email],
         first_name: @params[:first_name],
         last_name: @params[:last_name],
-        role: @params[:role] || "student",
+        role: "student",
         status: "invited"
       },
       @invited_by,
