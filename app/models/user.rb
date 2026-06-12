@@ -6,6 +6,8 @@ class User < ApplicationRecord
   has_one_attached :avatar
   has_many :enrollments, dependent: :destroy
   belongs_to :plan, optional: true
+  belongs_to :admin, class_name: "User", optional: true
+  has_many :students, class_name: "User", foreign_key: :admin_id, dependent: :nullify
 
   validates :first_name, :last_name, :email, :role, presence: true
   validates :email, uniqueness: { case_sensitive: false }

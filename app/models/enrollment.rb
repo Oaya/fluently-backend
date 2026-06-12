@@ -1,10 +1,9 @@
 class Enrollment < ApplicationRecord
   belongs_to :user
-  belongs_to :course
 
   has_many :lesson_progresses, dependent: :destroy
 
-  enum :status, { enrolled: "enrolled", in_progress: "in_progress", completed: "completed" }
+  enum :status, { enrolled: "enrolled", paused: "paused", canceled: "canceled" }
 
   def overall_progress
     total = Lesson.joins(section: :course).where(sections: { course_id: course_id }).count

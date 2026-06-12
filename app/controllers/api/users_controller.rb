@@ -1,12 +1,12 @@
 class Api::UsersController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin, only: [ :index ]
+  before_action :require_admin!, only: [ :index ]
   before_action :require_admin!, :require_active_subscription!, only: [ :bulk_delete ]
   include Rails.application.routes.url_helpers
 
   # GET /api/users
   def index
-    users = User.filtering(filter_params)
+    users = User.includes(:admin).filtering(filter_params).where.not(id: current_api_user.id)
     users = users.order(sort_params) if sort_params.present?
 
     render json: users.map { |user| user_result(user) }
@@ -147,7 +147,8 @@ class Api::UsersController < ApplicationController
       role: user.role,
       created_at: user.created_at,
       status: User.statuses[user.status],
-      avatar: user.avatar.attached? ? rails_blob_url(user.avatar, host: request.base_url) : nil
+      avatar: user.avatar.attached? ? rails_blob_url(user.avatar, host: request.base_url) : nil,
+      admin: user.admin.present? ? { id: user.admin.id, first_name: user.admin.first_name, last_name: user.admin.last_name, email: user.admin.email } : nil
     }
   end
 end

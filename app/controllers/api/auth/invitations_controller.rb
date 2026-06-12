@@ -42,14 +42,8 @@ module Api
       private
 
       def invite_params
-        allowed_roles = %w[student admin]
         params.require(:users).map do |inv_params|
-          permitted = inv_params.permit(:email, :first_name, :last_name, courses: [ :id, :title ])
-
-          role = inv_params[:role].to_s.downcase
-          role = "student" unless allowed_roles.include?(role)
-
-          permitted.merge(role: role)
+          inv_params.permit(:email, :first_name, :last_name, :level)
         end
       end
 

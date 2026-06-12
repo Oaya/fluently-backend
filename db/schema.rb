@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_12_043507) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_12_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -55,14 +55,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_043507) do
   end
 
   create_table "enrollments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.uuid "course_id", null: false
     t.datetime "created_at", null: false
     t.uuid "last_accessed_lesson_id"
+    t.string "level"
     t.string "status", default: "enrolled", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
-    t.index ["course_id"], name: "index_enrollments_on_course_id"
-    t.index ["user_id", "course_id"], name: "index_enrollments_on_user_id_and_course_id", unique: true
     t.index ["user_id"], name: "index_enrollments_on_user_id"
   end
 
@@ -114,6 +112,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_043507) do
   end
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "admin_id"
     t.boolean "cancel_at_period_end"
     t.datetime "confirmation_sent_at"
     t.string "confirmation_token"
@@ -154,7 +153,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_043507) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "enrollments", "courses"
   add_foreign_key "enrollments", "lessons", column: "last_accessed_lesson_id"
   add_foreign_key "enrollments", "users"
   add_foreign_key "lesson_progresses", "enrollments"

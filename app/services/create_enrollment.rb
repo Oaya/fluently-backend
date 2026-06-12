@@ -1,13 +1,14 @@
 class CreateEnrollment
-  def initialize(user:, course:)
+  def initialize(user:, level:)
     @user = user
-    @course = course
+    @level = level
   end
 
   def call
     Enrollment.transaction do
-      Enrollment.find_or_create_by!(user: @user, course: @course) do |e|
+      Enrollment.find_or_create_by!(user: @user) do |e|
         e.status = :enrolled
+        e.level = @level
       end
     end
   end

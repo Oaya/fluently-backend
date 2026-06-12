@@ -20,10 +20,11 @@ class InviteUser
         first_name: @params[:first_name],
         last_name: @params[:last_name],
         role: "student",
-        status: "invited"
+        status: "invited",
+        admin_id: @invited_by.id,
+        skip_invitation: true
       },
-      @invited_by,
-      skip_invitation: true
+      @invited_by
     )
 
     return invited_user if invited_user.errors.any?
@@ -31,19 +32,8 @@ class InviteUser
     invited_user.tap do |u|
       return u if u.errors.any?
 
-      if @params[:role].to_s.downcase == "student" && @params[:courses].present?
-        course_ids = @params[:courses].map { |c| c[:id] }
-
-        course_ids.each do |course_id|
-          course = Course.find(course_id)
-          CreateEnrollment.new(user: invited_user, course: course).call
-        end
-
-        invited_user.invited_courses = Course.where(id: course_ids)
-      end
-
-      SendInvitationEmailJob.perform_later(invited_user.id)
-      invited_user
+      CreateEnrollment.new(user: u, level: @params[:level]).call
+      SendInvitationEmailJob.perform_later(u.id)
     end
   end
 end

@@ -67,10 +67,9 @@ pp "Created admin user: #{admin_user.email}"
     status: "active",
     password: "password",
     password_confirmation: "password",
-    confirmed_at: Time.current
+    confirmed_at: Time.current,
+    admin: admin_user
   )
 end
 
-pp "Created 10 additional users"
-
-load Rails.root.join("db/seeds/courses.rb")
+pp "Created 2 additional users"
