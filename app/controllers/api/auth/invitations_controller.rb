@@ -7,6 +7,7 @@ module Api
 
       # POST /api/auth/invitation Send invitation email
       def create
+        # TODO: We need to add guard to send invitaion with plan.
         result = invite_params.map do |inv_params|
           InviteUser.new(invited_by: current_api_user, params: inv_params).call
         end

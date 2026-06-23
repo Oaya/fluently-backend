@@ -1,10 +1,12 @@
 <% frontend = ENV.fetch("FRONTEND_URL", "http://localhost:5174") %>
-<% accept_url = "#{frontend}/accept-invite?invitation_token=#{@token}" %>
+<% teacher = @resource.invited_by %>
+<% teacher_name = "#{teacher.first_name} #{teacher.last_name}" %>
+<% accept_url = "#{frontend}/accept-invite?invitation_token=#{@token}&invited_by=#{CGI.escape(teacher_name)}" %>
 
 Hello <%= @resource.email %>,
 
 
-You've been invited to learning journey with teacher
+You've been invited to a learning journey with <%= teacher_name %>
 
 
 Accept your invitation: <%= accept_url %>

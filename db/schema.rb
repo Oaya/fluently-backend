@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_12_210000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_12_210002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -43,52 +43,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_210000) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
-  create_table "courses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.string "category"
-    t.datetime "created_at", null: false
-    t.string "description", null: false
-    t.string "level"
-    t.decimal "price", precision: 10, scale: 2
-    t.boolean "published", default: false
-    t.string "title", null: false
-    t.datetime "updated_at", null: false
-  end
-
   create_table "enrollments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.uuid "last_accessed_lesson_id"
     t.string "level"
     t.string "status", default: "enrolled", null: false
     t.datetime "updated_at", null: false
     t.uuid "user_id", null: false
     t.index ["user_id"], name: "index_enrollments_on_user_id"
-  end
-
-  create_table "lesson_progresses", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.uuid "enrollment_id", null: false
-    t.uuid "lesson_id", null: false
-    t.integer "progress", default: 0, null: false
-    t.string "status", default: "not_started", null: false
-    t.datetime "updated_at", null: false
-    t.integer "watched_seconds", default: 0, null: false
-    t.index ["enrollment_id", "lesson_id"], name: "index_lesson_progresses_on_enrollment_and_lesson", unique: true
-    t.index ["enrollment_id", "lesson_id"], name: "index_lesson_progresses_on_enrollment_id_and_lesson_id", unique: true
-    t.index ["lesson_id"], name: "index_lesson_progresses_on_lesson_id"
-  end
-
-  create_table "lessons", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.string "article"
-    t.datetime "created_at", null: false
-    t.text "description"
-    t.integer "duration_in_seconds", null: false
-    t.string "lesson_type", null: false
-    t.integer "position", null: false
-    t.uuid "section_id", null: false
-    t.string "title", null: false
-    t.datetime "updated_at", null: false
-    t.index ["section_id", "position"], name: "index_lessons_on_section_id_and_position", unique: true
-    t.index ["section_id"], name: "index_lessons_on_section_id"
   end
 
   create_table "plans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -100,15 +61,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_210000) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "sections", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.uuid "course_id", null: false
+  create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "admin_id", null: false
     t.datetime "created_at", null: false
-    t.text "description", null: false
-    t.integer "position", null: false
-    t.string "title", null: false
+    t.integer "duration_in_minutes"
+    t.string "note"
+    t.string "payment_status", default: "unpaid"
+    t.date "scheduled_at", null: false
+    t.string "status", default: "scheduled", null: false
+    t.uuid "student_id", null: false
+    t.string "topic"
     t.datetime "updated_at", null: false
-    t.index ["course_id", "position"], name: "index_sections_on_course_id_and_position", unique: true
-    t.index ["course_id"], name: "index_sections_on_course_id"
+    t.index ["admin_id"], name: "index_sessions_on_admin_id"
+    t.index ["student_id"], name: "index_sessions_on_student_id"
   end
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -153,11 +118,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_210000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "enrollments", "lessons", column: "last_accessed_lesson_id"
   add_foreign_key "enrollments", "users"
-  add_foreign_key "lesson_progresses", "enrollments"
-  add_foreign_key "lesson_progresses", "lessons"
-  add_foreign_key "lessons", "sections"
-  add_foreign_key "sections", "courses"
+  add_foreign_key "sessions", "users", column: "admin_id"
+  add_foreign_key "sessions", "users", column: "student_id"
   add_foreign_key "users", "plans"
 end

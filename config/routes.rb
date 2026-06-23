@@ -38,6 +38,9 @@ Rails.application.routes.draw do
 
     resources :plans, only: [ :index ]
 
+    resources :sessions, only: [ :index, :create, :update, :destroy ] do
+    end
+
     resources :courses do
       resources :sections, only: [ :index, :create ] do
         collection { put :reorder }
