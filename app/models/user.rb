@@ -1,10 +1,7 @@
 class User < ApplicationRecord
   include Filterable
 
-  attr_accessor :invited_courses
-
   has_one_attached :avatar
-  has_many :enrollments, dependent: :destroy
   belongs_to :plan, optional: true
   belongs_to :admin, class_name: "User", optional: true
   has_many :students, class_name: "User", foreign_key: :admin_id, dependent: :nullify

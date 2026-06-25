@@ -28,12 +28,6 @@ Rails.application.routes.draw do
       collection do
         delete :bulk_delete
       end
-      member do
-        get :courses
-        get :enrollments
-
-        get "courses/:course_id/status", to: "users#course_status"
-      end
     end
 
     resources :plans, only: [ :index ]
@@ -44,41 +38,6 @@ Rails.application.routes.draw do
       end
       member do
         patch :cancel
-      end
-    end
-
-    resources :courses do
-      resources :sections, only: [ :index, :create ] do
-        collection { put :reorder }
-      end
-      member do
-        get :overview
-        get :enrollments, to: "enrollments#course"
-        patch :price
-        patch :publish
-      end
-    end
-
-    resources :sections, only: [ :show, :update, :destroy ] do
-      resources :lessons, only: [ :index, :create ] do
-        collection { put :reorder }
-      end
-    end
-
-    resources :lessons, only: [ :show, :update, :destroy ]
-
-    resources :enrollments, only: [] do
-      member do
-        post :start
-        patch "lessons/:lesson_id/complete", to: "enrollments#complete_lesson"
-      end
-    end
-
-    resources :lesson_progresses, only: [] do
-      member do
-        patch :complete
-        patch :incomplete
-        patch :save_position
       end
     end
 

@@ -27,75 +27,9 @@ class Api::UsersController < ApplicationController
     end
 
     users = User.where(id: user_ids).where.not(id: current_api_user.id)
-    ids = users.pluck(:id)
-
-    enrollment_ids = Enrollment.where(user_id: ids).pluck(:id)
-    LessonProgress.where(enrollment_id: enrollment_ids).delete_all
-    Enrollment.where(id: enrollment_ids).delete_all
     deleted_count = users.delete_all
 
     render json: { deleted_count: deleted_count }, status: :ok
-  end
-
-  # GET /api/users/:id/courses
-  def courses
-    user = User.find(params[:id])
-
-    courses_as_role = if user.role == "admin"
-      Course.all
-    else
-      Course.joins(:enrollments).where(enrollments: { user_id: params[:id] })
-    end
-
-    render json: courses_as_role.map { |course|
-      { id: course.id, title: course.title, published: course.published }
-    }
-  end
-
-  def enrollments
-    user = User.find(params[:id])
-    enrollments = user.enrollments.includes(:course).order(created_at: :desc)
-
-    render json: enrollments.map { |enrollment|
-      {
-        id: enrollment.id,
-        status: enrollment.status,
-        course: enrollment.course.as_json.merge(
-          thumbnail: enrollment.course.thumbnail.attached? ? rails_blob_url(enrollment.course.thumbnail, host: request.base_url) : nil
-        ),
-        enrolled_at: enrollment.created_at
-      }
-    }
-  end
-
-  def course_status
-    user = User.find(params[:id])
-    course = Course.find(params[:course_id])
-    enrollment = user.enrollments.find_by(course: course)
-
-    unless enrollment
-      return render_error("User is not enrolled in this course", status: :not_found)
-    end
-
-    total_lessons = Lesson.joins(section: :course).where(sections: { course_id: course.id }).count
-    lesson_progresses = []
-    progress_percentage = 0
-
-    if enrollment.in_progress? || enrollment.completed?
-      lesson_progresses = enrollment.lesson_progresses.includes(:lesson).map do |lp|
-        { id: lp.id, lesson_id: lp.lesson_id, status: lp.status, progress: lp.progress, watched_seconds: lp.watched_seconds }
-      end
-
-      completed_count = enrollment.lesson_progresses.where(status: :completed).count
-      progress_percentage = total_lessons > 0 ? (completed_count.to_f / total_lessons * 100).round(2) : 0
-    end
-
-    render json: {
-      enrollment: enrollment,
-      progress_percentage: progress_percentage,
-      total_lessons: total_lessons,
-      lesson_progresses: lesson_progresses
-    }
   end
 
   private

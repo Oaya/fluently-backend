@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_25_213949) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_25_220156) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -43,13 +43,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_25_213949) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
-  create_table "enrollments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+  create_table "homeworks", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "admin_id", null: false
+    t.boolean "ai_generated"
     t.datetime "created_at", null: false
+    t.date "due_date", null: false
+    t.string "language"
     t.string "level"
-    t.string "status", default: "enrolled", null: false
+    t.date "reviewed_at"
+    t.string "status", default: "pending", null: false
+    t.uuid "student_id", null: false
+    t.date "submitted_at"
+    t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.uuid "user_id", null: false
-    t.index ["user_id"], name: "index_enrollments_on_user_id"
+    t.index ["admin_id"], name: "index_homeworks_on_admin_id"
+    t.index ["student_id"], name: "index_homeworks_on_student_id"
   end
 
   create_table "plans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -96,7 +104,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_25_213949) do
     t.bigint "invited_by_id"
     t.string "invited_by_type"
     t.string "last_name", null: false
-    t.string "learning_language"
+    t.string "learning_language", default: [], array: true
     t.uuid "plan_id"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
@@ -120,7 +128,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_25_213949) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
-  add_foreign_key "enrollments", "users"
+  add_foreign_key "homeworks", "users", column: "admin_id"
+  add_foreign_key "homeworks", "users", column: "student_id"
   add_foreign_key "sessions", "users", column: "admin_id"
   add_foreign_key "sessions", "users", column: "student_id"
   add_foreign_key "users", "plans"
