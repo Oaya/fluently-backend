@@ -5,6 +5,7 @@ class Api::UsersController < ApplicationController
   include Rails.application.routes.url_helpers
 
   # GET /api/users
+  # This endpoint get students
   def index
     users = User.includes(:admin).filtering(filter_params).where.not(id: current_api_user.id)
     users = users.order(sort_params) if sort_params.present?

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_12_210002) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_25_213949) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -67,7 +67,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_210002) do
     t.integer "duration_in_minutes"
     t.string "note"
     t.string "payment_status", default: "unpaid"
-    t.date "scheduled_at", null: false
+    t.datetime "scheduled_at", null: false
     t.string "status", default: "scheduled", null: false
     t.uuid "student_id", null: false
     t.string "topic"
@@ -96,6 +96,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_210002) do
     t.bigint "invited_by_id"
     t.string "invited_by_type"
     t.string "last_name", null: false
+    t.string "learning_language"
     t.uuid "plan_id"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
@@ -104,6 +105,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_12_210002) do
     t.string "stripe_customer_id"
     t.string "stripe_subscription_id"
     t.string "subscription_status"
+    t.string "timezone"
     t.string "unconfirmed_email"
     t.datetime "updated_at", null: false
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true

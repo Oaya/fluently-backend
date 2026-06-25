@@ -15,6 +15,8 @@ class UserSerializer
       role: @user.role,
       avatar: avatar_url,
       status: @user.status,
+      timezone: @user.timezone,
+      learning_language: @user.learning_language,
       subscription: {
         status: @user.subscription_status,
         plan: @user.plan&.name,

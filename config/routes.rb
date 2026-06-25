@@ -39,6 +39,12 @@ Rails.application.routes.draw do
     resources :plans, only: [ :index ]
 
     resources :sessions, only: [ :index, :create, :update, :destroy ] do
+      collection do
+        get "today", to: "sessions#today"
+      end
+      member do
+        patch :cancel
+      end
     end
 
     resources :courses do

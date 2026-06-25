@@ -1,7 +1,7 @@
 class Api::SessionsController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy ]
-  before_action :set_session, only: [ :update, :destroy ]
+  before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy, :today, :cancel ]
+  before_action :set_session, only: [ :update, :destroy, :cancel ]
   include Rails.application.routes.url_helpers
 
   # GET /api/sessions
@@ -30,11 +30,18 @@ class Api::SessionsController < ApplicationController
     end
   end
 
-
-
   # PATCH /api/sessions/:id
   def update
     if @session.update(session_params)
+      render json: session_result(@session)
+    else
+      render_error(@session.errors.full_messages, status: :unprocessable_entity)
+    end
+  end
+
+  # PATCH /api/sessions/:id/cancel
+  def cancel
+    if @session.update(status: "canceled")
       render json: session_result(@session)
     else
       render_error(@session.errors.full_messages, status: :unprocessable_entity)
@@ -45,6 +52,22 @@ class Api::SessionsController < ApplicationController
   def destroy
     @session.destroy
     head :no_content
+  end
+
+  # GET /api/sessions/today
+  # This endpoint get the sessions that for today
+  def today
+    tz = ActiveSupport::TimeZone[current_api_user.timezone || "UTC"] || ActiveSupport::TimeZone["UTC"]
+    today_range = tz.now.beginning_of_day..tz.now.end_of_day
+    sessions = if current_api_user.role == "admin"
+      Session.includes(:student, :admin).where(scheduled_at: today_range)
+    else
+      Session.includes(:student, :admin).where(student: current_api_user, scheduled_at: today_range)
+    end
+
+    sessions = sessions.order(scheduled_at: :asc)
+
+    render json: sessions.map { |s| session_result(s) }
   end
 
   private
@@ -80,13 +103,8 @@ class Api::SessionsController < ApplicationController
         id: session.student.id,
         first_name: session.student.first_name,
         last_name: session.student.last_name,
+        avatar: session.student.avatar.attached? ? rails_blob_url(session.student.avatar, host: request.base_url) : nil,
         email: session.student.email
-      },
-      admin: {
-        id: session.admin.id,
-        first_name: session.admin.first_name,
-        last_name: session.admin.last_name,
-        email: session.admin.email
       }
     }
   end
