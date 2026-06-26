@@ -41,6 +41,8 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :homeworks, only: [ :index, :create, :update, :destroy ]
+
     resource :subscription, only: [] do
       collection do
         post :cancel

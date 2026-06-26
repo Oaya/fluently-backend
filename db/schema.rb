@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_25_220156) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_25_221524) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -48,6 +48,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_25_220156) do
     t.boolean "ai_generated"
     t.datetime "created_at", null: false
     t.date "due_date", null: false
+    t.string "instructions"
     t.string "language"
     t.string "level"
     t.date "reviewed_at"
@@ -104,7 +105,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_25_220156) do
     t.bigint "invited_by_id"
     t.string "invited_by_type"
     t.string "last_name", null: false
-    t.string "learning_language", default: [], array: true
+    t.string "learning_languages", default: [], array: true
     t.uuid "plan_id"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"

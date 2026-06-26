@@ -22,6 +22,7 @@ class InviteUser
         role: "student",
         status: "invited",
         admin_id: @invited_by.id,
+        learning_languages: @params[:learning_languages],
         skip_invitation: true
       },
       @invited_by
@@ -32,7 +33,6 @@ class InviteUser
     invited_user.tap do |u|
       return u if u.errors.any?
 
-      CreateEnrollment.new(user: u, level: @params[:level]).call
       SendInvitationEmailJob.perform_later(u.id)
     end
   end
