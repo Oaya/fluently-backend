@@ -83,6 +83,7 @@ class Api::UsersController < ApplicationController
       created_at: user.created_at,
       status: User.statuses[user.status],
       avatar: user.avatar.attached? ? rails_blob_url(user.avatar, host: request.base_url) : nil,
+      learning_languages: user.learning_languages,
       admin: user.admin.present? ? { id: user.admin.id, first_name: user.admin.first_name, last_name: user.admin.last_name, email: user.admin.email } : nil
     }
   end

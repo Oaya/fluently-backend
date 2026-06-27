@@ -1,4 +1,4 @@
-class Api::HomeWorksController < ApplicationController
+class Api::HomeworksController < ApplicationController
   before_action :authenticate_api_user!
   before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy ]
   before_action :set_homework, only: [ :update, :destroy ]
@@ -8,15 +8,16 @@ class Api::HomeWorksController < ApplicationController
   # If the current_api_user is admin return all the homeworks for the students.
   # If students, then return their only homeworks
   def index
+    pp current_api_user
     homeworks = if current_api_user.role == "admin"
-      HomeWork.includes(:student, :admin).all
+      Homework.includes(:student, :admin).all
     else
-      HomeWork.includes(:student, :admin).where(student: current_api_user)
+      Homework.includes(:student, :admin).where(student: current_api_user)
     end
 
     homeworks = homeworks.order(created_at: :desc)
 
-    render json: homeworks.map { |s| homeworks_result(s) }
+    render json: homeworks.map { |s| homework_result(s) }
   end
 
   # POST /api/homeworks
@@ -32,6 +33,7 @@ class Api::HomeWorksController < ApplicationController
 
   # PATCH /api/homeworks/:id
   def update
+    pp homework_params
     if @homework.update(homework_params)
       render json: homework_result(@homework)
     else
@@ -49,7 +51,7 @@ class Api::HomeWorksController < ApplicationController
   private
 
   def set_homework
-    @homework = homework.find(params[:id])
+    @homework = Homework.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_error("homework not found", status: :not_found)
   end
@@ -57,7 +59,7 @@ class Api::HomeWorksController < ApplicationController
   def homework_params
     params.require(:homework).permit(
       :student_id, :title, :instructions,
-      :language, :level, :due_date
+      :language, :level, :due_date, :status, :ai_generated
     )
   end
 
@@ -77,7 +79,8 @@ class Api::HomeWorksController < ApplicationController
         id: homework.student.id,
         first_name: homework.student.first_name,
         last_name: homework.student.last_name,
-        avatar: homework.student.avatar.attached? ? rails_blob_url(homework.student.avatar, host: request.base_url) : nil
+        avatar: homework.student.avatar.attached? ? rails_blob_url(homework.student.avatar, host: request.base_url) : nil,
+        learning_languages: homework.student.learning_languages
       }
     }
   end

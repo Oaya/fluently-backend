@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_25_221524) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_26_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -61,16 +61,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_25_221524) do
     t.index ["student_id"], name: "index_homeworks_on_student_id"
   end
 
-  create_table "plans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.json "features"
-    t.string "name", null: false
-    t.integer "price", null: false
-    t.string "stripe_price_id"
-    t.datetime "updated_at", null: false
-  end
-
-  create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+  create_table "lessons", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "admin_id", null: false
     t.datetime "created_at", null: false
     t.integer "duration_in_minutes"
@@ -81,8 +72,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_25_221524) do
     t.uuid "student_id", null: false
     t.string "topic"
     t.datetime "updated_at", null: false
-    t.index ["admin_id"], name: "index_sessions_on_admin_id"
-    t.index ["student_id"], name: "index_sessions_on_student_id"
+    t.index ["admin_id"], name: "index_lessons_on_admin_id"
+    t.index ["student_id"], name: "index_lessons_on_student_id"
+  end
+
+  create_table "plans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.json "features"
+    t.string "name", null: false
+    t.integer "price", null: false
+    t.string "stripe_price_id"
+    t.datetime "updated_at", null: false
   end
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -102,7 +102,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_25_221524) do
     t.datetime "invitation_sent_at"
     t.string "invitation_token"
     t.integer "invitations_count", default: 0
-    t.bigint "invited_by_id"
+    t.uuid "invited_by_id"
     t.string "invited_by_type"
     t.string "last_name", null: false
     t.string "learning_languages", default: [], array: true
@@ -131,7 +131,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_25_221524) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "homeworks", "users", column: "admin_id"
   add_foreign_key "homeworks", "users", column: "student_id"
-  add_foreign_key "sessions", "users", column: "admin_id"
-  add_foreign_key "sessions", "users", column: "student_id"
+  add_foreign_key "lessons", "users", column: "admin_id"
+  add_foreign_key "lessons", "users", column: "student_id"
   add_foreign_key "users", "plans"
 end

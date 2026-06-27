@@ -10,6 +10,7 @@ class InviteUser
     if existing.present?
       return existing if existing.status == "active"
 
+      existing.update!(invited_by: @invited_by)
       SendInvitationEmailJob.perform_later(existing.id)
       return existing
     end
