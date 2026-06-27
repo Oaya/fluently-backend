@@ -36,7 +36,7 @@ gem "image_processing", "~> 1.2"
 gem "rack-cors"
 
 gem "rack", ">= 3.2.5"
-gem "nokogiri", ">= 1.19.3"
+gem "nokogiri", ">= 1.19.4"
 gem "action_text-trix", ">= 2.1.16"
 
 gem "devise"
