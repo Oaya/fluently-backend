@@ -12,7 +12,7 @@ class Api::LessonsController < ApplicationController
       Lesson.includes(:student, :admin).where(student: current_api_user)
     end
 
-    lessons = lessons.order(scheduled_at: :desc)
+    lessons = lessons.order(scheduled_at: :asc)
 
     render json: lessons.map { |l| lesson_result(l) }
   end
@@ -90,6 +90,7 @@ class Api::LessonsController < ApplicationController
       status: lesson.status,
       topic: lesson.topic,
       note: lesson.note,
+      language: lesson.language,
       payment_status: lesson.payment_status,
       created_at: lesson.created_at,
       updated_at: lesson.updated_at,
@@ -98,7 +99,8 @@ class Api::LessonsController < ApplicationController
         first_name: lesson.student.first_name,
         last_name: lesson.student.last_name,
         avatar: lesson.student.avatar.attached? ? rails_blob_url(lesson.student.avatar, host: request.base_url) : nil,
-        email: lesson.student.email
+        email: lesson.student.email,
+        learning_languages: lesson.student.learning_languages
       }
     }
   end

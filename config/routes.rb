@@ -41,7 +41,8 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :homeworks, only: [ :index, :create, :update, :destroy ]
+    resources :homeworks, only: [ :index, :show, :create, :update, :destroy ]
+    resources :homework_submissions, only: [ :index, :show, :create, :update, :destroy ]
 
     resource :subscription, only: [] do
       collection do

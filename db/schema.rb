@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_26_000002) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_29_003901) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -43,6 +43,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_000002) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "homework_submissions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.string "answer_text"
+    t.datetime "created_at", null: false
+    t.uuid "homework_id", null: false
+    t.date "reviewed_at"
+    t.string "status", default: "draft", null: false
+    t.uuid "student_id", null: false
+    t.date "submitted_at"
+    t.datetime "updated_at", null: false
+    t.index ["homework_id"], name: "index_homework_submissions_on_homework_id"
+    t.index ["student_id", "homework_id"], name: "index_homework_submissions_on_student_id_and_homework_id", unique: true
+    t.index ["student_id"], name: "index_homework_submissions_on_student_id"
+  end
+
   create_table "homeworks", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "admin_id", null: false
     t.boolean "ai_generated"
@@ -65,6 +79,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_000002) do
     t.uuid "admin_id", null: false
     t.datetime "created_at", null: false
     t.integer "duration_in_minutes"
+    t.string "language", default: "", null: false
     t.string "note"
     t.string "payment_status", default: "unpaid"
     t.datetime "scheduled_at", null: false
@@ -83,6 +98,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_000002) do
     t.integer "price", null: false
     t.string "stripe_price_id"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "submission_attachments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "homework_submission_id", null: false
+    t.string "kind", null: false
+    t.datetime "updated_at", null: false
+    t.string "url"
+    t.index ["homework_submission_id"], name: "index_submission_attachments_on_homework_submission_id"
   end
 
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -129,9 +153,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_000002) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "homework_submissions", "homeworks"
+  add_foreign_key "homework_submissions", "users", column: "student_id"
   add_foreign_key "homeworks", "users", column: "admin_id"
   add_foreign_key "homeworks", "users", column: "student_id"
   add_foreign_key "lessons", "users", column: "admin_id"
   add_foreign_key "lessons", "users", column: "student_id"
+  add_foreign_key "submission_attachments", "homework_submissions"
   add_foreign_key "users", "plans"
 end

@@ -20,6 +20,12 @@ class Api::HomeworksController < ApplicationController
     render json: homeworks.map { |s| homework_result(s) }
   end
 
+  # GET /api/homeworks/:id
+  def show
+    homework = Homework.find(params[:id])
+    render json: homework.as_json
+  end
+
   # POST /api/homeworks
   def create
     homework = Homework.new(homework_params.merge(admin: current_api_user))
