@@ -10,9 +10,9 @@ class Api::HomeworksController < ApplicationController
   def index
     pp current_api_user
     homeworks = if current_api_user.role == "admin"
-      Homework.includes(:student, :admin).all
+      Homework.includes(:student, :admin, homework_submission: { submission_attachments: { file_attachment: :blob } }).all
     else
-      Homework.includes(:student, :admin).where(student: current_api_user)
+      Homework.includes(:student, :admin, homework_submission: { submission_attachments: { file_attachment: :blob } }).where(student: current_api_user)
     end
 
     homeworks = homeworks.order(created_at: :desc)
@@ -23,7 +23,7 @@ class Api::HomeworksController < ApplicationController
   # GET /api/homeworks/:id
   def show
     homework = Homework.find(params[:id])
-    render json: homework.as_json
+    render json: homework_result(homework), status: :ok
   end
 
   # POST /api/homeworks
@@ -65,19 +65,17 @@ class Api::HomeworksController < ApplicationController
   def homework_params
     params.require(:homework).permit(
       :student_id, :title, :instructions,
-      :language, :level, :due_date, :status, :ai_generated
+      :language, :level, :due_date, :ai_generated
     )
   end
 
   def homework_result(homework)
+    sub = homework.homework_submission
     {
       id: homework.id,
       due_date: homework.due_date,
       title: homework.title,
-      status: homework.status,
       instructions: homework.instructions,
-      submitted_at: homework.submitted_at,
-      reviewed_at: homework.reviewed_at,
       language: homework.language,
       level: homework.level,
       ai_generated: homework.ai_generated,
@@ -87,6 +85,22 @@ class Api::HomeworksController < ApplicationController
         last_name: homework.student.last_name,
         avatar: homework.student.avatar.attached? ? rails_blob_url(homework.student.avatar, host: request.base_url) : nil,
         learning_languages: homework.student.learning_languages
+      },
+      submission: sub && {
+        id: sub.id,
+        status: sub.status,
+        answer_text: sub.answer_text,
+        submitted_at: sub.submitted_at,
+        reviewed_at: sub.reviewed_at,
+        attachments: sub.submission_attachments.map { |a|
+          {
+            id: a.id,
+            type: a.type,
+            filename: a.file.attached? ? a.file.filename.to_s : nil,
+            url: a.url || (a.file.attached? ? rails_blob_url(a.file, host: request.base_url, disposition: "attachment") : nil),
+            sub: a.sub
+          }
+        }
       }
     }
   end

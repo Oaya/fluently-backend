@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_29_003901) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_29_032932) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -65,10 +65,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_003901) do
     t.string "instructions"
     t.string "language"
     t.string "level"
-    t.date "reviewed_at"
-    t.string "status", default: "pending", null: false
     t.uuid "student_id", null: false
-    t.date "submitted_at"
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["admin_id"], name: "index_homeworks_on_admin_id"
@@ -103,7 +100,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_003901) do
   create_table "submission_attachments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.uuid "homework_submission_id", null: false
-    t.string "kind", null: false
+    t.string "sub"
+    t.string "type", null: false
     t.datetime "updated_at", null: false
     t.string "url"
     t.index ["homework_submission_id"], name: "index_submission_attachments_on_homework_submission_id"

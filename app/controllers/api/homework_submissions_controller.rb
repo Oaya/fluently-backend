@@ -1,6 +1,6 @@
 class Api::HomeworkSubmissionsController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :set_submission, only: [ :show, :update, :destroy ]
+  before_action :set_submission, only: [ :show, :destroy ]
   include Rails.application.routes.url_helpers
 
   # GET /api/homework_submissions
@@ -39,38 +39,16 @@ class Api::HomeworkSubmissionsController < ApplicationController
 
     submission.assign_attributes(
       answer_text: submission_params[:answer_text],
-      status: submission_params[:status] || "submitted",
-      submitted_at: Time.current
+      status: submission_params[:status],
+      submitted_at: submission_params[:status] == "submitted" ? Time.current : nil
     )
-
-    pp submission_params
-
 
     ActiveRecord::Base.transaction do
       submission.save!
-      handle_attachments!(submission, attachment_params)
+      handle_attachments!(submission, attachment_params, keep_attachment_ids)
     end
 
     render json: submission_result(submission.reload), status: :created
-  rescue ActiveRecord::RecordInvalid => e
-    render_error(e.record.errors.full_messages, status: :unprocessable_entity)
-  end
-
-  # PATCH /api/homework_submissions/:id
-  # Only the owning student can update, and only while not yet reviewed.
-  def update
-    return render_error("Not authorized", status: :forbidden) unless owner?
-    return render_error("Cannot update a reviewed submission", status: :unprocessable_entity) if @submission.reviewed?
-
-    attrs = submission_params.to_h.except("homework_id", "attachments")
-    attrs["submitted_at"] = Time.current if attrs["status"] == "submitted" && @submission.submitted_at.nil?
-
-    ActiveRecord::Base.transaction do
-      @submission.update!(attrs)
-      handle_attachments!(@submission, attachment_params)
-    end
-
-    render json: submission_result(@submission.reload)
   rescue ActiveRecord::RecordInvalid => e
     render_error(e.record.errors.full_messages, status: :unprocessable_entity)
   end
@@ -98,25 +76,37 @@ class Api::HomeworkSubmissionsController < ApplicationController
     @submission.student_id == current_api_user.id
   end
 
-  def handle_attachments!(submission, attachments)
-    return if attachments.blank?
+  def handle_attachments!(submission, attachments, keep_ids)
+    existing = submission.submission_attachments.to_a
 
+    # Delete attachments the frontend removed
+    existing.each do |att|
+      unless keep_ids.include?(att.id)
+        att.file.purge if att.file.attached?
+        att.destroy!
+      end
+    end
+
+    # Create new attachments
     attachments.each do |att|
-      kind = att[:type].presence || att[:kind]
-      record = submission.submission_attachments.build(kind: kind, url: att[:url])
+      record = submission.submission_attachments.build(type: att[:type].presence, url: att[:url], sub: att[:sub])
       record.file.attach(att[:signed_id]) if att[:signed_id].present?
       record.save!
     end
   end
 
   def attachment_params
-    params.permit(attachments: [ :kind, :url, :signed_id, :type ])[:attachments] || []
+    params.permit(attachments: [ :type, :url, :signed_id, :sub ])[:attachments] || []
+  end
+
+  def keep_attachment_ids
+    params[:keep_attachment_ids] || []
   end
 
   def submission_params
     params.require(:homework_submission).permit(
       :homework_id, :answer_text, :status,
-      attachments: [ :kind, :url, :signed_id ]
+      attachments: [ :type, :url, :signed_id, :sub ]
     )
   end
 
@@ -133,15 +123,15 @@ class Api::HomeworkSubmissionsController < ApplicationController
         first_name: submission.student.first_name,
         last_name: submission.student.last_name
       },
-      attachments: submission.submission_attachments.map { |a| attachment_result(a) }
-    }
-  end
-
-  def attachment_result(attachment)
-    {
-      id: attachment.id,
-      kind: attachment.kind,
-      url: attachment.url || (attachment.file.attached? ? rails_blob_url(attachment.file, host: request.base_url) : nil)
+      attachments: submission.submission_attachments.map { |a|
+        {
+          id: a.id,
+          type: a.type,
+          filename: a.file.attached? ? a.file.filename.to_s : nil,
+          url: a.url || (a.file.attached? ? rails_blob_url(a.file, host: request.base_url, disposition: "attachment") : nil),
+          sub: a.sub
+        }
+      }
     }
   end
 end

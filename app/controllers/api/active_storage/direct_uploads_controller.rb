@@ -4,6 +4,7 @@ module Api
       before_action :authenticate_api_user!
 
       def create
+        # "homeworks", "avatars"
         type_prefix = params[:kind].to_s
 
         base_key = ::ActiveStorage::Blob.generate_unique_secure_token
