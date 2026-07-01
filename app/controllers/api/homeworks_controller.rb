@@ -8,7 +8,6 @@ class Api::HomeworksController < ApplicationController
   # If the current_api_user is admin return all the homeworks for the students.
   # If students, then return their only homeworks
   def index
-    pp current_api_user
     homeworks = if current_api_user.role == "admin"
       Homework.includes(:student, :admin, homework_submission: { submission_attachments: { file_attachment: :blob } }).all
     else
@@ -17,11 +16,12 @@ class Api::HomeworksController < ApplicationController
 
     homeworks = homeworks.order(created_at: :desc)
 
-    render json: homeworks.map { |s| homework_result(s, current_api_user) }
+    render json: homeworks.map { |s| homework_result(s, current_api_user.role) }
   end
 
   # GET /api/homeworks/:id
   def show
+    pp current_api_user.role
     homework = Homework.find(params[:id])
     render json: homework_result(homework, current_api_user.role), status: :ok
   end
@@ -105,7 +105,7 @@ class Api::HomeworksController < ApplicationController
       score: sub.score
       }
     }
-    result[:notes] = sub.notes if role == "admin"
+    result[:submission][:notes] = sub.notes if role == "admin"
 
     result
   end
