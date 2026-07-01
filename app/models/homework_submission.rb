@@ -9,5 +9,12 @@ class HomeworkSubmission < ApplicationRecord
     reviewed: "reviewed"
   }, validate: true
 
+
+  enum :score, {
+    needs_work: "needs_work",
+    good: "good",
+    excellent: "excellent"
+  }
+
   validates :status, presence: true
 end

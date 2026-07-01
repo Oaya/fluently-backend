@@ -1,6 +1,7 @@
 class Api::HomeworkSubmissionsController < ApplicationController
   before_action :authenticate_api_user!
   before_action :set_submission, only: [ :show, :destroy ]
+  before_action :require_admin!, :require_active_subscription!, only: [ :feedback ]
   include Rails.application.routes.url_helpers
 
   # GET /api/homework_submissions
@@ -17,12 +18,12 @@ class Api::HomeworkSubmissionsController < ApplicationController
     submissions = submissions.where(homework_id: params[:homework_id]) if params[:homework_id].present?
     submissions = submissions.order(created_at: :asc)
 
-    render json: submissions.map { |s| submission_result(s) }
+    render json: submissions.map { |s| submission_result(s, current_api_user.role) }
   end
 
   # GET /api/homework_submissions/:id
   def show
-    render json: submission_result(@submission)
+    render json: submission_result(@submission, current_api_user.role)
   end
 
   # POST /api/homework_submissions
@@ -48,7 +49,28 @@ class Api::HomeworkSubmissionsController < ApplicationController
       handle_attachments!(submission, attachment_params, keep_attachment_ids)
     end
 
-    render json: submission_result(submission.reload), status: :created
+    render json: submission_result(submission.reload, current_api_user.role), status: :created
+  rescue ActiveRecord::RecordInvalid => e
+    render_error(e.record.errors.full_messages, status: :unprocessable_entity)
+  end
+
+
+  # PATCH /api/homework_submissions/:id/feedback
+  # Admin only. One submission per student per homework (find or create).
+  def feedback
+    submission = HomeworkSubmission.find(params[:id])
+    return render_error("Cannot give feedback submission", status: :unprocessable_entity) if !submission.persisted?
+
+    submission.assign_attributes(
+      feedback: feedback_params[:feedback],
+      score: feedback_params[:score],
+      notes: feedback_params[:notes],
+      reviewed_at: Time.current,
+      status: "reviewed"
+    )
+
+    submission.save!
+    render json: submission_result(submission.reload, current_api_user.role), status: :created
   rescue ActiveRecord::RecordInvalid => e
     render_error(e.record.errors.full_messages, status: :unprocessable_entity)
   end
@@ -110,8 +132,12 @@ class Api::HomeworkSubmissionsController < ApplicationController
     )
   end
 
-  def submission_result(submission)
-    {
+  def feedback_params
+    params.require(:homework_submission).permit(:score, :feedback, :notes)
+  end
+
+  def submission_result(submission, role)
+    result = {
       id: submission.id,
       homework_id: submission.homework_id,
       answer_text: submission.answer_text,
@@ -131,7 +157,12 @@ class Api::HomeworkSubmissionsController < ApplicationController
           url: a.url || (a.file.attached? ? rails_blob_url(a.file, host: request.base_url, disposition: "attachment") : nil),
           sub: a.sub
         }
-      }
+      },
+      feedback: submission.feedback,
+      score: submission.score
     }
+    result[:notes] = submission.notes if role == "admin"
+
+    result
   end
 end

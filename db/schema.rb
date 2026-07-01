@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_29_032932) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_01_030613) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -46,8 +46,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_29_032932) do
   create_table "homework_submissions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "answer_text"
     t.datetime "created_at", null: false
+    t.text "feedback"
     t.uuid "homework_id", null: false
+    t.text "notes"
     t.date "reviewed_at"
+    t.string "score"
     t.string "status", default: "draft", null: false
     t.uuid "student_id", null: false
     t.date "submitted_at"

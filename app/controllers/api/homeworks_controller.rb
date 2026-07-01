@@ -17,13 +17,13 @@ class Api::HomeworksController < ApplicationController
 
     homeworks = homeworks.order(created_at: :desc)
 
-    render json: homeworks.map { |s| homework_result(s) }
+    render json: homeworks.map { |s| homework_result(s, current_api_user) }
   end
 
   # GET /api/homeworks/:id
   def show
     homework = Homework.find(params[:id])
-    render json: homework_result(homework), status: :ok
+    render json: homework_result(homework, current_api_user.role), status: :ok
   end
 
   # POST /api/homeworks
@@ -31,7 +31,7 @@ class Api::HomeworksController < ApplicationController
     homework = Homework.new(homework_params.merge(admin: current_api_user))
 
     if homework.save
-      render json: homework_result(homework), status: :created
+      render json: homework_result(homework, current_api_user.role), status: :created
     else
       render_error(homework.errors.full_messages, status: :unprocessable_entity)
     end
@@ -41,7 +41,7 @@ class Api::HomeworksController < ApplicationController
   def update
     pp homework_params
     if @homework.update(homework_params)
-      render json: homework_result(@homework)
+      render json: homework_result(@homework, current_api_user.role)
     else
       render_error(@homework.errors.full_messages, status: :unprocessable_entity)
     end
@@ -69,9 +69,9 @@ class Api::HomeworksController < ApplicationController
     )
   end
 
-  def homework_result(homework)
+  def homework_result(homework, role)
     sub = homework.homework_submission
-    {
+    result = {
       id: homework.id,
       due_date: homework.due_date,
       title: homework.title,
@@ -100,8 +100,13 @@ class Api::HomeworksController < ApplicationController
             url: a.url || (a.file.attached? ? rails_blob_url(a.file, host: request.base_url, disposition: "attachment") : nil),
             sub: a.sub
           }
-        }
+        },
+      feedback: sub.feedback,
+      score: sub.score
       }
     }
+    result[:notes] = sub.notes if role == "admin"
+
+    result
   end
 end
