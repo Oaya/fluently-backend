@@ -9,12 +9,13 @@ class Api::HomeworksController < ApplicationController
   # If students, then return their only homeworks
   def index
     homeworks = if current_api_user.role == "admin"
-      Homework.includes(:student, :admin, homework_submission: { submission_attachments: { file_attachment: :blob } }).all
+      scope = Homework.includes(:student, :admin, homework_submission: { submission_attachments: { file_attachment: :blob } }).all
+            params[:student_id].present? ? scope.where(student_id: params[:student_id]) : scope.all
     else
       Homework.includes(:student, :admin, homework_submission: { submission_attachments: { file_attachment: :blob } }).where(student: current_api_user)
     end
 
-    homeworks = homeworks.order(created_at: :desc)
+    homeworks = homeworks.order(created_at: :asc)
 
     render json: homeworks.map { |s| homework_result(s, current_api_user.role) }
   end
@@ -79,6 +80,7 @@ class Api::HomeworksController < ApplicationController
       language: homework.language,
       level: homework.level,
       ai_generated: homework.ai_generated,
+      status: homework_status_badge(homework),
       student: {
         id: homework.student.id,
         first_name: homework.student.first_name,
@@ -101,12 +103,24 @@ class Api::HomeworksController < ApplicationController
             sub: a.sub
           }
         },
-      feedback: sub.feedback,
-      score: sub.score
+        feedback: sub.status == "reviewed" ? {
+          feedback_text: sub.feedback,
+          score: sub.score,
+          **(role == "admin" ? { notes: sub.notes } : {})
+        } : nil
       }
     }
-    result[:submission][:notes] = sub.notes if role == "admin"
 
     result
+  end
+
+
+  def homework_status_badge(homework)
+    done_statuses = %w[submitted reviewed]
+
+    return "done" if done_statuses.include?(homework.homework_submission&.status)
+
+    overdue = homework.due_date.present? && homework.due_date.to_date < Date.today
+    overdue ? "overdue" : "pending"
   end
 end

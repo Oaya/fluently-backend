@@ -158,10 +158,12 @@ class Api::HomeworkSubmissionsController < ApplicationController
           sub: a.sub
         }
       },
-      feedback: submission.feedback,
-      score: submission.score
+      feedback: submission.status == "reviewed" ? {
+        feedback_text: submission.feedback,
+        score: submission.score,
+        **(role == "admin" ? { notes: submission.notes } : {})
+      } : nil
     }
-    result[:notes] = submission.notes if role == "admin"
 
     result
   end
