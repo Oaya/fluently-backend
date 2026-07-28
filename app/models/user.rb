@@ -5,6 +5,9 @@ class User < ApplicationRecord
   belongs_to :plan, optional: true
   belongs_to :admin, class_name: "User", optional: true
   has_many :students, class_name: "User", foreign_key: :admin_id, dependent: :nullify
+  has_many :homeworks, class_name: "Homework", foreign_key: :student_id, dependent: :destroy
+  has_many :lessons_as_admin, class_name: "Lesson", foreign_key: :admin_id, dependent: :destroy
+  has_many :lessons_as_student, class_name: "Lesson", foreign_key: :student_id, dependent: :destroy
 
   validates :first_name, :last_name, :email, :role, presence: true
   validates :email, uniqueness: { case_sensitive: false }

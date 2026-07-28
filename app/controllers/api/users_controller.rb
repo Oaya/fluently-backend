@@ -1,7 +1,7 @@
 class Api::UsersController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin!, only: [ :index ]
-  before_action :require_admin!, :require_active_subscription!, only: [ :bulk_delete ]
+  before_action :require_admin!, only: [ :index, :with_statues ]
+  before_action :require_admin!, :require_active_subscription!, only: [ :destroy ]
   include Rails.application.routes.url_helpers
 
   # GET /api/users
@@ -13,23 +13,39 @@ class Api::UsersController < ApplicationController
     render json: users.map { |user| user_result(user) }
   end
 
+  # GET /api/users/with_statues
+  # This endpoint get student with statues
+  def with_statues
+    users = User.where.not(id: current_api_user.id).includes(:admin, homeworks: :homework_submission).order(created_at: :asc)
+
+    render json: users.map { |u| user_with_statues_result(u) }
+  end
+
   # GET /api/users/:id
   def show
     user = User.find(params[:id])
     render json: user_result(user)
   end
 
-  # DELETE /api/users/bulk_delete
-  def bulk_delete
-    user_ids = user_delete_params[:user_ids] || []
-    unless user_ids.is_a?(Array)
-      return render_error("user_ids must be an array", status: :bad_request)
+  # PATCH /api/users/:id
+  def update
+    user = User.find(params[:id])
+
+    if user.update(user_params)
+      render json: user_result(user)
+    else
+      render_error(user.errors.full_messages, status: :unprocessable_entity)
     end
+  end
 
-    users = User.where(id: user_ids).where.not(id: current_api_user.id)
-    deleted_count = users.delete_all
+  # DELETE /api/users/:id
+  def destroy
+    user = User.find(params[:id])
+    user.destroy!
 
-    render json: { deleted_count: deleted_count }, status: :ok
+    head :no_content
+  rescue ActiveRecord::RecordNotFound
+    render_error("User not found", status: :not_found)
   end
 
   private
@@ -69,11 +85,35 @@ class Api::UsersController < ApplicationController
     clauses.join(", ")
   end
 
+  def user_params
+    params.require(:user).permit(
+      :first_name,
+      :last_name,
+      :email,
+      :level,
+      learning_languages: []
+    )
+  end
+
   def user_delete_params
     params.permit(user_ids: [])
   end
 
   def user_result(user)
+    {
+      id: user.id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      status: User.statuses[user.status],
+      created_at: user.created_at,
+      avatar: user.avatar.attached? ? rails_blob_url(user.avatar, host: request.base_url) : nil,
+      role: user.role,
+      learning_languages: user.learning_languages
+    }
+  end
+
+  def user_with_statues_result(user)
     {
       id: user.id,
       email: user.email,
@@ -83,8 +123,23 @@ class Api::UsersController < ApplicationController
       created_at: user.created_at,
       status: User.statuses[user.status],
       avatar: user.avatar.attached? ? rails_blob_url(user.avatar, host: request.base_url) : nil,
-      learning_languages: user.learning_languages,
-      admin: user.admin.present? ? { id: user.admin.id, first_name: user.admin.first_name, last_name: user.admin.last_name, email: user.admin.email } : nil
+      hw_status: homework_status_badge(user.homeworks)
     }
+  end
+
+  def homework_status_badge(homeworks)
+    return nil if homeworks.empty?
+
+    done_statuses = %w[submitted reviewed]
+    today = Date.today
+
+    pending = homeworks.reject { |hw|
+      done_statuses.include?(hw.homework_submission&.status)
+    }
+
+    return "done" if pending.empty?
+
+    overdue = pending.any? { |hw| hw.due_date.present? && hw.due_date.to_date < today }
+    overdue ? "overdue" : "due"
   end
 end

@@ -26,7 +26,7 @@ Rails.application.routes.draw do
 
     resources :users, only: [ :index, :show, :update, :destroy ] do
       collection do
-        delete :bulk_delete
+        get :with_statues
       end
     end
 

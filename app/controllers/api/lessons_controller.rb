@@ -7,7 +7,8 @@ class Api::LessonsController < ApplicationController
   # GET /api/lessons
   def index
     lessons = if current_api_user.role == "admin"
-      Lesson.includes(:student, :admin).all
+      scope = Lesson.includes(:student, :admin)
+      params[:student_id].present? ? scope.where(student_id: params[:student_id]) : scope.all
     else
       Lesson.includes(:student, :admin).where(student: current_api_user)
     end
@@ -78,7 +79,7 @@ class Api::LessonsController < ApplicationController
   def lesson_params
     params.require(:lesson).permit(
       :student_id, :scheduled_at, :duration_in_minutes,
-      :status, :topic, :note, :payment_status
+      :status, :topic, :note, :payment_status, :language
     )
   end
 
