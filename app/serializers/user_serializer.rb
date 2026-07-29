@@ -7,7 +7,7 @@ class UserSerializer
   end
 
   def as_json
-    {
+    json = {
       id: @user.id,
       email: @user.email,
       first_name: @user.first_name,
@@ -16,8 +16,11 @@ class UserSerializer
       avatar: avatar_url,
       status: @user.status,
       timezone: @user.timezone,
-      learning_languages: @user.learning_languages,
-      subscription: {
+      learning_languages: @user.learning_languages
+    }
+
+    unless @user.role == "student"
+      json[:subscription] = {
         status: @user.subscription_status,
         plan: @user.plan&.name,
         price: @user.plan&.price,
@@ -25,7 +28,9 @@ class UserSerializer
         cancel_at_period_end: @user.cancel_at_period_end,
         has_stripe_subscription: @user.stripe_subscription_id.present? || @user.stripe_customer_id.present?
       }
-    }
+    end
+
+    json
   end
 
   private

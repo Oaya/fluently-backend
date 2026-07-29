@@ -42,11 +42,14 @@ Rails.application.routes.draw do
     end
 
     resources :homeworks, only: [ :index, :show, :create, :update, :destroy ]
+
     resources :homework_submissions, only: [ :index, :show, :create, :destroy ] do
       member do
         patch :feedback
       end
     end
+
+    resources :goals, only: [ :index, :show, :create, :update, :destroy ]
 
     resource :subscription, only: [] do
       collection do
@@ -55,9 +58,6 @@ Rails.application.routes.draw do
         post :payment_checkout
       end
     end
-
-
-
 
 
     # Active Storage direct upload endpoint
