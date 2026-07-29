@@ -55,7 +55,7 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: "e-learning-app-backend-novo.onrender.com", protocol: "https" }
+  config.action_mailer.default_url_options = { host: "fluently-app-backend-novo.onrender.com", protocol: "https" }
 
   # Mailjet HTTP API for transactional email (SMTP is blocked by Render)
   config.action_mailer.delivery_method = :mailjet_api

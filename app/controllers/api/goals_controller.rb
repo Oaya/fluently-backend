@@ -8,9 +8,10 @@ class Api::GoalsController < ApplicationController
   # If the current_api_user is admin return all the goals for the students.
   # If students, then return their only goals
   def index
+    pp params[:student_id]
     goals = if current_api_user.role == "admin"
       scope = Goal.includes(:student, :admin).all
-            params[:student_id].present? ? scope.where(student_id: params[:student_id]) : scope.all
+      params[:student_id].present? ? scope.where(student_id: params[:student_id]) : scope.all
     else
       Goal.includes(:student, :admin).where(student: current_api_user)
     end

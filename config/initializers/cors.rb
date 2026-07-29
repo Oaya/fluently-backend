@@ -9,7 +9,7 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
   allow do
     origins "http://localhost:5174",
             "http://localhost:5174",
-            "https://e-learning-app-frontend-phi.vercel.app"
+            "https://fluently-app-frontend-phi.vercel.app"
 
     resource "*",
       headers: :any,
