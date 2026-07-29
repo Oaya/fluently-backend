@@ -1,6 +1,6 @@
 services:
   web:
-    container_name: e_learning_dev_server
+    container_name: fluently_dev_server
     build:
       context: .
       target: build
@@ -16,20 +16,20 @@ services:
       BUNDLE_WITHOUT: ""
       DB_HOST: db
       DB_PORT: 5432
-      DB_NAME: e_learning_dev
-      DB_USERNAME: e_learning_dev
-      DB_PASSWORD: e_learning_dev
-      TEST_DB_NAME: e_learning_test
+      DB_NAME: fluently_dev
+      DB_USERNAME: fluently_dev
+      DB_PASSWORD: fluently_dev
+      TEST_DB_NAME: fluently_test
     depends_on:
       - db
 
   db:
-    container_name: e_learning_dev_db
+    container_name: fluently_dev_db
     image: postgres:16
     environment:
-      POSTGRES_DB: e_learning_dev
-      POSTGRES_USER: e_learning_dev
-      POSTGRES_PASSWORD: e_learning_dev
+      POSTGRES_DB: fluently_dev
+      POSTGRES_USER: fluently_dev
+      POSTGRES_PASSWORD: fluently_dev
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:

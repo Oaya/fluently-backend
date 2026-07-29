@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_29_043109) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_29_191105) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -90,6 +90,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_043109) do
     t.index ["student_id"], name: "index_homeworks_on_student_id"
   end
 
+  create_table "lesson_recordings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "duration_in_seconds"
+    t.integer "file_size"
+    t.uuid "lesson_id", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "lessons", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "admin_id", null: false
     t.datetime "created_at", null: false
@@ -104,6 +112,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_043109) do
     t.datetime "updated_at", null: false
     t.index ["admin_id"], name: "index_lessons_on_admin_id"
     t.index ["student_id"], name: "index_lessons_on_student_id"
+  end
+
+  create_table "meetings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.uuid "lesson_id", null: false
+    t.string "room_name"
+    t.string "room_url"
+    t.datetime "updated_at", null: false
+    t.index ["lesson_id"], name: "index_meetings_on_lesson_id", unique: true
   end
 
   create_table "plans", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -175,8 +193,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_29_043109) do
   add_foreign_key "homework_submissions", "users", column: "student_id"
   add_foreign_key "homeworks", "users", column: "admin_id"
   add_foreign_key "homeworks", "users", column: "student_id"
+  add_foreign_key "lesson_recordings", "lessons"
   add_foreign_key "lessons", "users", column: "admin_id"
   add_foreign_key "lessons", "users", column: "student_id"
+  add_foreign_key "meetings", "lessons"
   add_foreign_key "submission_attachments", "homework_submissions"
   add_foreign_key "users", "plans"
 end
