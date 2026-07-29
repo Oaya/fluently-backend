@@ -118,9 +118,13 @@ class Api::HomeworksController < ApplicationController
   def homework_status_badge(homework)
     done_statuses = %w[submitted reviewed]
 
-    return "done" if done_statuses.include?(homework.homework_submission&.status)
+    return "submitted" if done_statuses.include?(homework.homework_submission&.status)
 
     overdue = homework.due_date.present? && homework.due_date.to_date < Date.today
-    overdue ? "overdue" : "pending"
+    return "overdue" if overdue
+
+    return "draft" if homework.homework_submission&.status == "draft"
+
+    "pending"
   end
 end
