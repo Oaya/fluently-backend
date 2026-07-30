@@ -32,13 +32,16 @@ Rails.application.routes.draw do
 
     resources :plans, only: [ :index ]
 
-    resources :lessons, only: [ :index, :create, :update, :destroy ] do
+    resources :lessons, only: [ :index, :create, :update, :destroy, :show ] do
       collection do
         get "today", to: "lessons#today"
       end
       member do
         patch :cancel
+        get :token
+        patch :end
       end
+      resources :recordings, only: [ :index, :create ], controller: "lesson_recordings"
     end
 
     resources :homeworks, only: [ :index, :show, :create, :update, :destroy ]
