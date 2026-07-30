@@ -1,7 +1,7 @@
 class Api::LessonsController < ApplicationController
   before_action :authenticate_api_user!
   before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy, :cancel ]
-  before_action :set_lesson, only: [ :update, :destroy, :cancel ]
+  before_action :set_lesson, only: [ :update, :destroy, :cancel, :end ]
   include Rails.application.routes.url_helpers
 
   # GET /api/lessons
@@ -14,8 +14,13 @@ class Api::LessonsController < ApplicationController
     end
 
     lessons = lessons.order(scheduled_at: :asc)
-
     render json: lessons.map { |l| lesson_result(l) }
+  end
+
+  # GET /api/lessons/:id
+  def show
+    lesson = Lesson.find(params[:id])
+    render json: lesson_result(lesson), status: :ok
   end
 
   # POST /api/lessons
@@ -68,6 +73,37 @@ class Api::LessonsController < ApplicationController
     render json: lessons.map { |l| lesson_result(l) }
   end
 
+
+  def token
+    user = Current.user
+    lesson = Lesson.find(params[:id])
+    is_admin = user.admin?
+    identity = "user-#{user.id}"
+    name = "#{user.first_name} #{user.last_name}"
+
+    jwt = LivekitTokenService.generate(
+      room_name: lesson.room_name,
+      identity: identity,
+      name: name,
+      is_admin: is_admin
+    )
+
+    render json: {
+      token: jwt,
+      url: ENV["LIVEKIT_URL"],
+      room_name: lesson.room_name
+    }
+  end
+
+  # PATCH /api/lessons/:id/end
+  def end
+    if @lesson.update(lesson_meeting_params)
+      render json: lesson_result(@lesson)
+    else
+      render_error(@lesson.errors.full_messages, status: :unprocessable_entity)
+    end
+  end
+
   private
 
   def set_lesson
@@ -83,6 +119,12 @@ class Api::LessonsController < ApplicationController
     )
   end
 
+  def lesson_meeting_params
+    params.require(:lesson).permit(
+      :meeting_duration_in_seconds, :status, :meeting_feedback
+    )
+  end
+
   def lesson_result(lesson)
     {
       id: lesson.id,
@@ -95,6 +137,9 @@ class Api::LessonsController < ApplicationController
       payment_status: lesson.payment_status,
       created_at: lesson.created_at,
       updated_at: lesson.updated_at,
+      room_name: lesson.room_name,
+      meeting_duration_in_seconds: lesson.meeting_duration_in_seconds,
+      meeting_feedback: lesson.meeting_feedback,
       student: {
         id: lesson.student.id,
         first_name: lesson.student.first_name,
