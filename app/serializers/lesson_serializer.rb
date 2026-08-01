@@ -1,9 +1,10 @@
 class LessonSerializer
   include Rails.application.routes.url_helpers
 
-  def initialize(lesson, host:)
+  def initialize(lesson, host:, current_user: nil)
     @lesson = lesson
     @host = host
+    @current_user = current_user
   end
 
   def lesson_result
@@ -22,6 +23,7 @@ class LessonSerializer
       meeting_duration_in_seconds: @lesson.meeting_duration_in_seconds,
       meeting_feedback: @lesson.meeting_feedback,
       recording_url: recording_url,
+      student_note: @current_user&.role == "student" ? @lesson.student_note : nil,
       student: {
         id: @lesson.student.id,
         first_name: @lesson.student.first_name,

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_30_220255) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_01_041630) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -112,6 +112,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_30_220255) do
     t.datetime "scheduled_at", null: false
     t.string "status", default: "scheduled", null: false
     t.uuid "student_id", null: false
+    t.string "student_note"
     t.string "topic"
     t.datetime "updated_at", null: false
     t.index ["admin_id"], name: "index_lessons_on_admin_id"
