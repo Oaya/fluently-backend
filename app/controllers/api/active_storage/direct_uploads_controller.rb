@@ -8,7 +8,7 @@ module Api
         type_prefix = params[:kind].to_s
 
         base_key = ::ActiveStorage::Blob.generate_unique_secure_token
-        custom_key = "users/#{Current.user.id}/#{type_prefix}/#{base_key}"
+        custom_key = "users/#{current_api_user.id}/#{type_prefix}/#{base_key}"
 
         blob = ::ActiveStorage::Blob.create_before_direct_upload!(
           filename: params[:filename],

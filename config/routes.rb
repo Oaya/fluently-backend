@@ -37,11 +37,10 @@ Rails.application.routes.draw do
         get "today", to: "lessons#today"
       end
       member do
-        patch :cancel
         get :token
         patch :end
       end
-      resources :recordings, only: [ :index, :create ], controller: "lesson_recordings"
+      resource :recording, only: [ :show, :create ], controller: "lesson_recordings"
     end
 
     resources :homeworks, only: [ :index, :show, :create, :update, :destroy ]

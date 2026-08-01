@@ -10,7 +10,7 @@ class Api::UsersController < ApplicationController
     users = User.includes(:admin).filtering(filter_params).where.not(id: current_api_user.id)
     users = users.order(sort_params) if sort_params.present?
 
-    render json: users.map { |user| user_result(user) }
+    render json: users.map { |user| UserSerializer.new(user, host: request.base_url).user_result }
   end
 
   # GET /api/users/with_statues
@@ -18,13 +18,13 @@ class Api::UsersController < ApplicationController
   def with_statues
     users = User.where.not(id: current_api_user.id).includes(:admin, homeworks: :homework_submission).order(created_at: :asc)
 
-    render json: users.map { |u| user_with_statues_result(u) }
+    render json: users.map { |u| UserSerializer.new(u, host: request.base_url).user_with_statues_result }
   end
 
   # GET /api/users/:id
   def show
     user = User.find(params[:id])
-    render json: user_result(user)
+    render json: UserSerializer.new(user, host: request.base_url).user_result
   end
 
   # PATCH /api/users/:id
@@ -32,7 +32,7 @@ class Api::UsersController < ApplicationController
     user = User.find(params[:id])
 
     if user.update(user_params)
-      render json: user_result(user)
+      render json: UserSerializer.new(user, host: request.base_url).user_result
     else
       render_error(user.errors.full_messages, status: :unprocessable_entity)
     end
@@ -90,55 +90,13 @@ class Api::UsersController < ApplicationController
       :first_name,
       :last_name,
       :email,
+      :status,
+      :timezone,
       learning_languages: []
     )
   end
 
   def user_delete_params
     params.permit(user_ids: [])
-  end
-
-  def user_result(user)
-    {
-      id: user.id,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      email: user.email,
-      status: User.statuses[user.status],
-      created_at: user.created_at,
-      avatar: user.avatar.attached? ? rails_blob_url(user.avatar, host: request.base_url) : nil,
-      role: user.role,
-      learning_languages: user.learning_languages
-    }
-  end
-
-  def user_with_statues_result(user)
-    {
-      id: user.id,
-      email: user.email,
-      first_name: user.first_name,
-      last_name: user.last_name,
-      role: user.role,
-      created_at: user.created_at,
-      status: User.statuses[user.status],
-      avatar: user.avatar.attached? ? rails_blob_url(user.avatar, host: request.base_url) : nil,
-      hw_status: homework_status_badge(user.homeworks)
-    }
-  end
-
-  def homework_status_badge(homeworks)
-    return nil if homeworks.empty?
-
-    done_statuses = %w[submitted reviewed]
-    today = Date.today
-
-    pending = homeworks.reject { |hw|
-      done_statuses.include?(hw.homework_submission&.status)
-    }
-
-    return "done" if pending.empty?
-
-    overdue = pending.any? { |hw| hw.due_date.present? && hw.due_date.to_date < today }
-    overdue ? "overdue" : "due"
   end
 end

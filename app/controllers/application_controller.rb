@@ -1,17 +1,9 @@
 class ApplicationController < ActionController::API
-  before_action :set_current_user, unless: :devise_controller?
-
   private
 
   def render_error(message, status:)
     msg = message.is_a?(Array) ? message.join(", ") : message.to_s
     render json: { error: msg }, status: status
-  end
-
-  def set_current_user
-    return unless current_api_user
-
-    Current.user = current_api_user
   end
 
   def require_admin!
