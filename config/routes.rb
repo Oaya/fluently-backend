@@ -39,6 +39,7 @@ Rails.application.routes.draw do
       member do
         get :token
         patch :end
+        patch :student_note
       end
       resource :recording, only: [ :show, :create ], controller: "lesson_recordings"
     end
