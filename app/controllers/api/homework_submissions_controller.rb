@@ -18,12 +18,12 @@ class Api::HomeworkSubmissionsController < ApplicationController
     submissions = submissions.where(homework_id: params[:homework_id]) if params[:homework_id].present?
     submissions = submissions.order(created_at: :asc)
 
-    render json: submissions.map { |s| submission_result(s, current_api_user.role) }
+    render json: submissions.map { |h| HomeworkSerializer.new(h, current_api_user.role, host: request.base_url).submission_result }
   end
 
   # GET /api/homework_submissions/:id
   def show
-    render json: submission_result(@submission, current_api_user.role)
+    render json: HomeworkSerializer.new(@submission, current_api_user.role, host: request.base_url).submission_result
   end
 
   # POST /api/homework_submissions
@@ -49,7 +49,7 @@ class Api::HomeworkSubmissionsController < ApplicationController
       handle_attachments!(submission, attachment_params, keep_attachment_ids)
     end
 
-    render json: submission_result(submission.reload, current_api_user.role), status: :created
+    render json: HomeworkSerializer.new(submission.reload, current_api_user.role, host: request.base_url).submission_result, status: :created
   rescue ActiveRecord::RecordInvalid => e
     render_error(e.record.errors.full_messages, status: :unprocessable_entity)
   end
@@ -70,7 +70,7 @@ class Api::HomeworkSubmissionsController < ApplicationController
     )
 
     submission.save!
-    render json: submission_result(submission.reload, current_api_user.role), status: :created
+    render json: HomeworkSerializer.new(submission.reload, current_api_user.role, host: request.base_url).submission_result, status: :created
   rescue ActiveRecord::RecordInvalid => e
     render_error(e.record.errors.full_messages, status: :unprocessable_entity)
   end
@@ -134,37 +134,5 @@ class Api::HomeworkSubmissionsController < ApplicationController
 
   def feedback_params
     params.require(:homework_submission).permit(:score, :feedback, :notes)
-  end
-
-  def submission_result(submission, role)
-    result = {
-      id: submission.id,
-      homework_id: submission.homework_id,
-      answer_text: submission.answer_text,
-      status: submission.status,
-      submitted_at: submission.submitted_at,
-      reviewed_at: submission.reviewed_at,
-      student: {
-        id: submission.student.id,
-        first_name: submission.student.first_name,
-        last_name: submission.student.last_name
-      },
-      attachments: submission.submission_attachments.map { |a|
-        {
-          id: a.id,
-          type: a.type,
-          filename: a.file.attached? ? a.file.filename.to_s : nil,
-          url: a.url || (a.file.attached? ? rails_blob_url(a.file, host: request.base_url, disposition: "attachment") : nil),
-          sub: a.sub
-        }
-      },
-      feedback: submission.status == "reviewed" ? {
-        feedback_text: submission.feedback,
-        score: submission.score,
-        **(role == "admin" ? { notes: submission.notes } : {})
-      } : nil
-    }
-
-    result
   end
 end

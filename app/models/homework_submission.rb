@@ -6,7 +6,8 @@ class HomeworkSubmission < ApplicationRecord
   enum :status, {
     draft: "draft",
     submitted: "submitted",
-    reviewed: "reviewed"
+    reviewed: "reviewed",
+    overdue: "overdue"
   }, validate: true
 
 

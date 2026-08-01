@@ -6,7 +6,7 @@ class UserSerializer
     @host = host
   end
 
-  def as_json
+  def user_result
     json = {
       id: @user.id,
       email: @user.email,
@@ -16,7 +16,8 @@ class UserSerializer
       avatar: avatar_url,
       status: @user.status,
       timezone: @user.timezone,
-      learning_languages: @user.learning_languages
+      learning_languages: @user.learning_languages,
+      created_at: @user.created_at
     }
 
     unless @user.role == "student"
@@ -33,10 +34,34 @@ class UserSerializer
     json
   end
 
-  private
+  def user_with_statues_result
+    {
+      id: @user.id,
+      email: @user.email,
+      first_name: @user.first_name,
+      last_name: @user.last_name,
+      role: @user.role,
+      created_at: @user.created_at,
+      status: User.statuses[@user.status],
+      avatar: avatar_url,
+      hw_status: homework_status_badge(@user.homeworks)
+    }
+  end
 
   def avatar_url
     return nil unless @user.avatar.attached?
     rails_blob_url(@user.avatar, host: @host)
+  end
+
+  private
+
+  def homework_status_badge(homeworks)
+    return nil if homeworks.empty?
+
+    statuses = homeworks.map { |hw| HomeworkSerializer.new(hw, nil, host: @host).send(:homework_status_badge, hw) }
+    return "overdue" if statuses.include?("overdue")
+    return "done" if statuses.all? { |s| %w[submitted reviewed].include?(s) }
+
+    "pending"
   end
 end

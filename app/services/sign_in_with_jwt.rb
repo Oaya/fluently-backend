@@ -19,7 +19,7 @@ class SignInWithJwt
     {
       message: message,
       token: jwt,
-      user: UserSerializer.new(user, host: @controller.request.base_url).as_json
+      user: UserSerializer.new(user, host: @controller.request.base_url).user_result
     }
   end
 

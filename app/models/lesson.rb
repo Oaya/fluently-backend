@@ -1,6 +1,7 @@
 class Lesson < ApplicationRecord
   belongs_to :student, class_name: "User"
   belongs_to :admin,   class_name: "User"
+  has_one :lesson_recording, dependent: :destroy
   after_create :set_room_name
 
   enum :status, {

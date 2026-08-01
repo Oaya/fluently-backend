@@ -17,14 +17,14 @@ class Api::HomeworksController < ApplicationController
 
     homeworks = homeworks.order(created_at: :asc)
 
-    render json: homeworks.map { |s| homework_result(s, current_api_user.role) }
+    render json: homeworks.map { |h| HomeworkSerializer.new(h, current_api_user.role, host: request.base_url).homework_result }
   end
 
   # GET /api/homeworks/:id
   def show
     pp current_api_user.role
     homework = Homework.find(params[:id])
-    render json: homework_result(homework, current_api_user.role), status: :ok
+    render json: HomeworkSerializer.new(homework, current_api_user.role, host: request.base_url).homework_result, status: :ok
   end
 
   # POST /api/homeworks
@@ -32,7 +32,7 @@ class Api::HomeworksController < ApplicationController
     homework = Homework.new(homework_params.merge(admin: current_api_user))
 
     if homework.save
-      render json: homework_result(homework, current_api_user.role), status: :created
+      render json: HomeworkSerializer.new(homework, current_api_user.role, host: request.base_url).homework_result, status: :created
     else
       render_error(homework.errors.full_messages, status: :unprocessable_entity)
     end
@@ -42,7 +42,7 @@ class Api::HomeworksController < ApplicationController
   def update
     pp homework_params
     if @homework.update(homework_params)
-      render json: homework_result(@homework, current_api_user.role)
+      render json: HomeworkSerializer.new(@homework, current_api_user.role, host: request.base_url).homework_result
     else
       render_error(@homework.errors.full_messages, status: :unprocessable_entity)
     end
@@ -68,63 +68,5 @@ class Api::HomeworksController < ApplicationController
       :student_id, :title, :instructions,
       :language, :level, :due_date, :ai_generated
     )
-  end
-
-  def homework_result(homework, role)
-    sub = homework.homework_submission
-    result = {
-      id: homework.id,
-      due_date: homework.due_date,
-      title: homework.title,
-      instructions: homework.instructions,
-      language: homework.language,
-      level: homework.level,
-      ai_generated: homework.ai_generated,
-      status: homework_status_badge(homework),
-      student: {
-        id: homework.student.id,
-        first_name: homework.student.first_name,
-        last_name: homework.student.last_name,
-        avatar: homework.student.avatar.attached? ? rails_blob_url(homework.student.avatar, host: request.base_url) : nil,
-        learning_languages: homework.student.learning_languages
-      },
-      submission: sub && {
-        id: sub.id,
-        status: sub.status,
-        answer_text: sub.answer_text,
-        submitted_at: sub.submitted_at,
-        reviewed_at: sub.reviewed_at,
-        attachments: sub.submission_attachments.map { |a|
-          {
-            id: a.id,
-            type: a.type,
-            filename: a.file.attached? ? a.file.filename.to_s : nil,
-            url: a.url || (a.file.attached? ? rails_blob_url(a.file, host: request.base_url, disposition: "attachment") : nil),
-            sub: a.sub
-          }
-        },
-        feedback: sub.status == "reviewed" ? {
-          feedback_text: sub.feedback,
-          score: sub.score,
-          **(role == "admin" ? { notes: sub.notes } : {})
-        } : nil
-      }
-    }
-
-    result
-  end
-
-
-  def homework_status_badge(homework)
-    done_statuses = %w[submitted reviewed]
-
-    return "submitted" if done_statuses.include?(homework.homework_submission&.status)
-
-    overdue = homework.due_date.present? && homework.due_date.to_date < Date.today
-    return "overdue" if overdue
-
-    return "draft" if homework.homework_submission&.status == "draft"
-
-    "pending"
   end
 end

@@ -6,15 +6,15 @@ module Api
 
 
       def me
-        user = Current.user
+        user = current_api_user
         return render_error("Not authenticated", status: :unauthorized) unless user
 
-        render json: UserSerializer.new(user, host: request.base_url).as_json
+        render json: UserSerializer.new(user, host: request.base_url).user_result
       end
 
 
       def update_me
-        user = Current.user
+        user = current_api_user
         return render_error("Not authenticated", status: :unauthorized) unless user
 
         if user_params.key?(:avatar_signed_id)
@@ -36,14 +36,14 @@ module Api
         user.assign_attributes(user_params.except(:avatar_signed_id))
         user.save!
 
-        render json: UserSerializer.new(user, host: request.base_url).as_json
+        render json: UserSerializer.new(user, host: request.base_url).user_result
       rescue => e
         Rails.logger.error(e.full_message)
         render_error("#{e.class}: #{e.message}", status: :internal_server_error)
       end
 
       def update_password
-        user = Current.user
+        user = current_api_user
         return render_error("Not authenticated", status: :unauthorized) unless user
         current_password = params[:current_password]
         new_password = params[:new_password]
@@ -64,7 +64,7 @@ module Api
       end
 
       def signup_status
-        user = Current.user
+        user = current_api_user
         if user
           render json: { signed_up: true, email: user.email }
         else
