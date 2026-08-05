@@ -27,6 +27,7 @@ module Api
           return
         end
 
+        # if the plan is free, then the subscription status will be active immediately, otherwise the  status will be pending until the user completes the payment
         subscription_status = plan.name == "free" ? "active" : "pending"
 
         user = User.new(

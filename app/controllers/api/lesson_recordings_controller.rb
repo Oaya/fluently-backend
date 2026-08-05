@@ -33,6 +33,9 @@ class Api::LessonRecordingsController < ApplicationController
   private
 
   def set_lesson
-    @lesson = Lesson.find(params[:lesson_id])
+    scope = current_api_user.admin? ? current_api_user.lessons_as_admin : current_api_user.lessons_as_student
+    @lesson = scope.find(params[:lesson_id])
+  rescue ActiveRecord::RecordNotFound
+    render_error("Lesson not found", status: :not_found)
   end
 end

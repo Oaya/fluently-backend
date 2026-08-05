@@ -1,5 +1,5 @@
 class Api::SubscriptionsController < ApplicationController
-  before_action :authenticate_api_user!, :require_admin!, :set_current_user
+  before_action :authenticate_api_user!, :require_admin!
 
   # GET /api/subscriptions/payment_checkout
   def payment_checkout

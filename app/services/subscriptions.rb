@@ -15,8 +15,8 @@ class Subscriptions
     frontend = Rails.application.credentials[:frontend_url] || "http://localhost:5174"
 
     session = Stripe::Checkout::Session.create(
-      ui_mode: "embedded",
-      mode: "payment",
+      ui_mode: "embedded_page",
+      mode: "subscription",
       customer: customer.id,
       line_items: [ { price: plan.stripe_price_id, quantity: 1 } ],
       return_url: "#{frontend}/admin/dashboard",

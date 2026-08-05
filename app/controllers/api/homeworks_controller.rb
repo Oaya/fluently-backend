@@ -1,18 +1,18 @@
 class Api::HomeworksController < ApplicationController
   before_action :authenticate_api_user!
   before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy ]
-  before_action :set_homework, only: [ :update, :destroy ]
+  before_action :set_homework, only: [ :show, :update, :destroy ]
   include Rails.application.routes.url_helpers
 
   # GET /api/homeworks
-  # If the current_api_user is admin return all the homeworks for the students.
+  # If the current_api_user is admin return the homeworks for their own students.
   # If students, then return their only homeworks
   def index
-    homeworks = if current_api_user.role == "admin"
-      scope = Homework.includes(:student, :admin, homework_submission: { submission_attachments: { file_attachment: :blob } }).all
-            params[:student_id].present? ? scope.where(student_id: params[:student_id]) : scope.all
+    homeworks = if current_api_user.admin?
+      scope = current_api_user.homeworks_as_admin.includes(:student, :admin, homework_submission: { submission_attachments: { file_attachment: :blob } })
+      params[:student_id].present? ? scope.where(student_id: params[:student_id]) : scope
     else
-      Homework.includes(:student, :admin, homework_submission: { submission_attachments: { file_attachment: :blob } }).where(student: current_api_user)
+      current_api_user.homeworks.includes(:student, :admin, homework_submission: { submission_attachments: { file_attachment: :blob } })
     end
 
     homeworks = homeworks.order(created_at: :asc)
@@ -22,13 +22,14 @@ class Api::HomeworksController < ApplicationController
 
   # GET /api/homeworks/:id
   def show
-    pp current_api_user.role
-    homework = Homework.find(params[:id])
-    render json: HomeworkSerializer.new(homework, current_api_user.role, host: request.base_url).homework_result, status: :ok
+    render json: HomeworkSerializer.new(@homework, current_api_user.role, host: request.base_url).homework_result, status: :ok
   end
 
   # POST /api/homeworks
   def create
+    student = current_api_user.students.find_by(id: homework_params[:student_id])
+    return render_error("Student not found", status: :not_found) unless student
+
     homework = Homework.new(homework_params.merge(admin: current_api_user))
 
     if homework.save
@@ -40,7 +41,10 @@ class Api::HomeworksController < ApplicationController
 
   # PATCH /api/homeworks/:id
   def update
-    pp homework_params
+    if homework_params[:student_id].present? && !current_api_user.students.exists?(id: homework_params[:student_id])
+      return render_error("Student not found", status: :not_found)
+    end
+
     if @homework.update(homework_params)
       render json: HomeworkSerializer.new(@homework, current_api_user.role, host: request.base_url).homework_result
     else
@@ -58,7 +62,8 @@ class Api::HomeworksController < ApplicationController
   private
 
   def set_homework
-    @homework = Homework.find(params[:id])
+    scope = current_api_user.admin? ? current_api_user.homeworks_as_admin : current_api_user.homeworks
+    @homework = scope.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_error("homework not found", status: :not_found)
   end

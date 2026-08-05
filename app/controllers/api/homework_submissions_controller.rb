@@ -1,19 +1,14 @@
 class Api::HomeworkSubmissionsController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :set_submission, only: [ :show, :destroy ]
+  before_action :set_submission, only: [ :show, :destroy, :feedback ]
   before_action :require_admin!, :require_active_subscription!, only: [ :feedback ]
   include Rails.application.routes.url_helpers
 
   # GET /api/homework_submissions
-  # Admin: all submissions (optionally filtered by homework_id)
+  # Admin: submissions for their own students (optionally filtered by homework_id)
   # Student: only their own submissions
   def index
-    submissions = if current_api_user.role == "admin"
-      HomeworkSubmission.includes(:student, :homework, submission_attachments: { file_attachment: :blob })
-    else
-      HomeworkSubmission.includes(:student, :homework, submission_attachments: { file_attachment: :blob })
-                        .where(student: current_api_user)
-    end
+    submissions = accessible_submissions.includes(:student, :homework, submission_attachments: { file_attachment: :blob })
 
     submissions = submissions.where(homework_id: params[:homework_id]) if params[:homework_id].present?
     submissions = submissions.order(created_at: :asc)
@@ -31,8 +26,11 @@ class Api::HomeworkSubmissionsController < ApplicationController
   def create
     return render_error("Only students can submit homework", status: :forbidden) if current_api_user.role == "admin"
 
+    homework = current_api_user.homeworks.find_by(id: submission_params[:homework_id])
+    return render_error("Homework not found", status: :not_found) unless homework
+
     submission = HomeworkSubmission.find_or_initialize_by(
-      homework_id: submission_params[:homework_id],
+      homework_id: homework.id,
       student: current_api_user
     )
 
@@ -56,12 +54,9 @@ class Api::HomeworkSubmissionsController < ApplicationController
 
 
   # PATCH /api/homework_submissions/:id/feedback
-  # Admin only. One submission per student per homework (find or create).
+  # Admin only, and only for their own students' submissions.
   def feedback
-    submission = HomeworkSubmission.find(params[:id])
-    return render_error("Cannot give feedback submission", status: :unprocessable_entity) if !submission.persisted?
-
-    submission.assign_attributes(
+    @submission.assign_attributes(
       feedback: feedback_params[:feedback],
       score: feedback_params[:score],
       notes: feedback_params[:notes],
@@ -69,8 +64,8 @@ class Api::HomeworkSubmissionsController < ApplicationController
       status: "reviewed"
     )
 
-    submission.save!
-    render json: HomeworkSerializer.new(submission.reload, current_api_user.role, host: request.base_url).submission_result, status: :created
+    @submission.save!
+    render json: HomeworkSerializer.new(@submission.reload, current_api_user.role, host: request.base_url).submission_result, status: :created
   rescue ActiveRecord::RecordInvalid => e
     render_error(e.record.errors.full_messages, status: :unprocessable_entity)
   end
@@ -88,10 +83,19 @@ class Api::HomeworkSubmissionsController < ApplicationController
   private
 
   def set_submission
-    scope = current_api_user.role == "admin" ? HomeworkSubmission : HomeworkSubmission.where(student: current_api_user)
-    @submission = scope.includes(submission_attachments: { file_attachment: :blob }).find(params[:id])
+    @submission = accessible_submissions.includes(submission_attachments: { file_attachment: :blob }).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_error("Submission not found", status: :not_found)
+  end
+
+  # Admin: submissions belonging to homeworks they assigned (i.e. their own students).
+  # Student: only their own submissions.
+  def accessible_submissions
+    if current_api_user.admin?
+      HomeworkSubmission.joins(:homework).where(homeworks: { admin_id: current_api_user.id })
+    else
+      HomeworkSubmission.where(student: current_api_user)
+    end
   end
 
   def owner?
