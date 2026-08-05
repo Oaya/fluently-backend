@@ -9,10 +9,10 @@ plans = [
     price: 0,
     features: {
       max_students: 3,
-      session_schedule: true,
+      lesson_schedule: true,
       homework_assignments: true,
       payment_tracking: false,
-      session_recording: true,
+      lesson_recording: true,
       student_goals: true,
       ai_homework_generation: false
     }
@@ -23,10 +23,10 @@ plans = [
     stripe_price_id: "price_1SznDlAkHFmsFUgnSFS8RrhD",
     features: {
       max_students: "unlimited",
-      session_schedule: true,
+      lesson_schedule: true,
       homework_assignments: true,
       payment_tracking: true,
-      session_recording: true,
+      lesson_recording: true,
       student_goals: true,
       ai_homework_generation: true
     }

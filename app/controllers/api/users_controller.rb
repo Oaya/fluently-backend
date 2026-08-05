@@ -2,12 +2,13 @@ class Api::UsersController < ApplicationController
   before_action :authenticate_api_user!
   before_action :require_admin!, only: [ :index, :with_statues ]
   before_action :require_admin!, :require_active_subscription!, only: [ :destroy ]
+  before_action :set_user, only: [ :show, :update, :destroy ]
   include Rails.application.routes.url_helpers
 
   # GET /api/users
   # This endpoint get students
   def index
-    users = User.includes(:admin).filtering(filter_params).where.not(id: current_api_user.id)
+    users = User.includes(:admin).filtering(filter_params).where.not(id: current_api_user.id).where(admin_id: current_api_user.id)
     users = users.order(sort_params) if sort_params.present?
 
     render json: users.map { |user| UserSerializer.new(user, host: request.base_url).user_result }
@@ -16,39 +17,42 @@ class Api::UsersController < ApplicationController
   # GET /api/users/with_statues
   # This endpoint get student with statues
   def with_statues
-    users = User.where.not(id: current_api_user.id).includes(:admin, homeworks: :homework_submission).order(created_at: :asc)
+    users = User.where(admin_id: current_api_user.id).includes(:admin, homeworks: :homework_submission).order(created_at: :asc)
 
     render json: users.map { |u| UserSerializer.new(u, host: request.base_url).user_with_statues_result }
   end
 
   # GET /api/users/:id
   def show
-    user = User.find(params[:id])
-    render json: UserSerializer.new(user, host: request.base_url).user_result
+    render json: UserSerializer.new(@user, host: request.base_url).user_result
   end
 
   # PATCH /api/users/:id
   def update
-    user = User.find(params[:id])
-
-    if user.update(user_params)
-      render json: UserSerializer.new(user, host: request.base_url).user_result
+    if @user.update(user_params)
+      render json: UserSerializer.new(@user, host: request.base_url).user_result
     else
-      render_error(user.errors.full_messages, status: :unprocessable_entity)
+      render_error(@user.errors.full_messages, status: :unprocessable_entity)
     end
   end
 
   # DELETE /api/users/:id
   def destroy
-    user = User.find(params[:id])
-    user.destroy!
+    @user.destroy!
 
     head :no_content
-  rescue ActiveRecord::RecordNotFound
-    render_error("User not found", status: :not_found)
   end
 
   private
+
+  # Admins may access their own account and their own students'.
+  # Students may only access their own account.
+  def set_user
+    scope = current_api_user.admin? ? User.where(id: current_api_user.id).or(User.where(admin_id: current_api_user.id)) : User.where(id: current_api_user.id)
+    @user = scope.find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    render_error("User not found", status: :not_found)
+  end
 
   def filter_params
     permitted = params.permit(:search, :status)

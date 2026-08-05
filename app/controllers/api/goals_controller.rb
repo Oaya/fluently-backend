@@ -1,19 +1,18 @@
 class Api::GoalsController < ApplicationController
   before_action :authenticate_api_user!
   before_action :require_admin!, only: [ :create, :update, :destroy ]
-  before_action :set_goal, only: [ :update, :destroy ]
+  before_action :set_goal, only: [ :show, :update, :destroy ]
   include Rails.application.routes.url_helpers
 
   # GET /api/goals
-  # If the current_api_user is admin return all the goals for the students.
+  # If the current_api_user is admin return the goals for their own students.
   # If students, then return their only goals
   def index
-    pp params[:student_id]
-    goals = if current_api_user.role == "admin"
-      scope = Goal.includes(:student, :admin).all
-      params[:student_id].present? ? scope.where(student_id: params[:student_id]) : scope.all
+    goals = if current_api_user.admin?
+      scope = current_api_user.goals_as_admin.includes(:student, :admin)
+      params[:student_id].present? ? scope.where(student_id: params[:student_id]) : scope
     else
-      Goal.includes(:student, :admin).where(student: current_api_user)
+      current_api_user.goals_as_student.includes(:student, :admin)
     end
 
     goals = goals.order(created_at: :asc)
@@ -23,12 +22,14 @@ class Api::GoalsController < ApplicationController
 
   # GET /api/goals/:id
   def show
-    goal = Goal.find(params[:id])
-    render json: goal_result(goal), status: :ok
+    render json: goal_result(@goal), status: :ok
   end
 
   # POST /api/goals
   def create
+    student = current_api_user.students.find_by(id: goal_params[:student_id])
+    return render_error("Student not found", status: :not_found) unless student
+
     goal = Goal.new(goal_params.merge(admin: current_api_user))
 
     if goal.save
@@ -40,6 +41,10 @@ class Api::GoalsController < ApplicationController
 
   # PATCH /api/goals/:id
   def update
+    if goal_params[:student_id].present? && !current_api_user.students.exists?(id: goal_params[:student_id])
+      return render_error("Student not found", status: :not_found)
+    end
+
     if @goal.update(goal_params)
       render json: goal_result(@goal)
     else
@@ -57,7 +62,8 @@ class Api::GoalsController < ApplicationController
   private
 
   def set_goal
-    @homework = Goal.find(params[:id])
+    scope = current_api_user.admin? ? current_api_user.goals_as_admin : current_api_user.goals_as_student
+    @goal = scope.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render_error("goal not found", status: :not_found)
   end

@@ -16,9 +16,12 @@ class UserSerializer
       avatar: avatar_url,
       status: @user.status,
       timezone: @user.timezone,
-      learning_languages: @user.learning_languages,
       created_at: @user.created_at
     }
+
+    if @user.role === "student"
+      json[:learning_languages] = @user.learning_languages
+    end
 
     unless @user.role == "student"
       json[:subscription] = {
