@@ -13,6 +13,7 @@ class User < ApplicationRecord
   has_many :goals_as_student, class_name: "Goal", foreign_key: :student_id, dependent: :destroy
   has_many :goal_activities_as_admin, class_name: "GoalActivity", foreign_key: :admin_id, dependent: :destroy
   has_many :goals_activities_as_student, class_name: "GoalActivity", foreign_key: :student_id, dependent: :destroy
+  has_many :goal_comments, class_name: "GoalComments", foreign_key: :student_id, dependent: :destroy
 
   validates :first_name, :last_name, :email, :role, presence: true
   validates :email, uniqueness: { case_sensitive: false }
