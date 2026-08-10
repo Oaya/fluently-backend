@@ -1,7 +1,7 @@
 class Api::GoalsController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin!, only: [ :create, :update, :destroy ]
-  before_action :set_goal, only: [ :show, :update, :destroy, :activity, :update_activity, :destroy_activity ]
+  before_action :require_admin!, only: [ :create, :update, :destroy, :comment, :destroy_comment ]
+  before_action :set_goal, only: [ :show, :update, :destroy, :activity, :update_activity, :destroy_activity, :comment, :destroy_comment ]
   include Rails.application.routes.url_helpers
 
   # GET /api/goals
@@ -22,7 +22,7 @@ class Api::GoalsController < ApplicationController
 
   # GET /api/goals/:id
   def show
-    render json: goal_with_activities(@goal), status: :ok
+    render json: goal_with_all_data(@goal), status: :ok
   end
 
   # POST /api/goals
@@ -76,7 +76,7 @@ class Api::GoalsController < ApplicationController
     end
 
 
-    render json: goal_with_activities(@goal), status: :created
+    render json: goal_with_all_data(@goal), status: :created
   rescue ActiveRecord::RecordInvalid => e
     render_error(e.record.errors.full_messages, status: :unprocessable_entity)
   end
@@ -92,7 +92,7 @@ class Api::GoalsController < ApplicationController
       @goal.update!(goal_activity_params.slice(:status, :progress, :achieved_at).to_h.compact)
     end
 
-    render json: goal_with_activities(@goal), status: :ok
+    render json: goal_with_all_data(@goal), status: :ok
   rescue ActiveRecord::RecordNotFound
     render_error("activity not found", status: :not_found)
   rescue ActiveRecord::RecordInvalid => e
@@ -124,6 +124,32 @@ class Api::GoalsController < ApplicationController
     render_error("activity not found", status: :not_found)
   end
 
+  # POST /api/goals/:id/create_comment
+  def comment
+    return render_error("Only Admin can submit comment", status: :forbidden) if current_api_user.role == "student"
+
+    comment = @goal.goal_comments.new(
+      admin_id: current_api_user.id,
+      comment: goal_comment_params[:comment]
+    )
+
+    comment.save!
+
+    render json: goal_with_all_data(@goal), status: :created
+  rescue ActiveRecord::RecordInvalid => e
+    render_error(e.record.errors.full_messages, status: :unprocessable_entity)
+  end
+
+  # DELETE /api/goals/:id/comment/:comment_id
+  def destroy_comment
+    comment = @goal.goal_comments.find(params[:comment_id])
+    comment.destroy!
+
+    render json: goal_with_all_data(@goal), status: :ok
+  rescue ActiveRecord::RecordNotFound
+    render_error("comment not found", status: :not_found)
+  end
+
 
   private
 
@@ -141,12 +167,18 @@ class Api::GoalsController < ApplicationController
     )
   end
 
-   def goal_activity_params
+  def goal_activity_params
     params.permit(
       :activity_id, :date, :description,
       :progress, :status, :achieved_at
     )
-   end
+  end
+
+  def goal_comment_params
+    params.permit(
+      :comment_id, :comment
+    )
+  end
 
   def goal_result(goal)
     result = {
@@ -164,7 +196,7 @@ class Api::GoalsController < ApplicationController
     result
   end
 
-  def goal_with_activities(goal)
+  def goal_with_all_data(goal)
     result = {
       id: goal.id,
       student_id: goal.student.id,
@@ -182,6 +214,12 @@ class Api::GoalsController < ApplicationController
           date: a.date,
           created_at: a.created_at,
           progress: a.progress
+        }
+      },
+      comments: goal.goal_comments.map { |c| {
+          id: c.id,
+          comment: c.comment,
+          created_at: c.created_at
         }
       }
     }

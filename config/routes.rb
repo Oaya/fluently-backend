@@ -58,6 +58,9 @@ Rails.application.routes.draw do
         post :activity
         patch :activity, action: :update_activity
         delete "activity/:activity_id", action: :destroy_activity, as: :destroy_activity
+
+        post :comment
+        delete "comment/:comment_id", action: :destroy_comment, as: :destroy_comment
       end
     end
 

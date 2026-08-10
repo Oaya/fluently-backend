@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_07_230846) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_10_184820) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -55,6 +55,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_230846) do
     t.index ["admin_id"], name: "index_goal_activities_on_admin_id"
     t.index ["goal_id"], name: "index_goal_activities_on_goal_id"
     t.index ["student_id"], name: "index_goal_activities_on_student_id"
+  end
+
+  create_table "goal_comments", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "admin_id", null: false
+    t.string "comment", null: false
+    t.datetime "created_at", null: false
+    t.uuid "goal_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_id"], name: "index_goal_comments_on_admin_id"
+    t.index ["goal_id"], name: "index_goal_comments_on_goal_id"
   end
 
   create_table "goals", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -201,6 +211,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_07_230846) do
   add_foreign_key "goal_activities", "goals"
   add_foreign_key "goal_activities", "users", column: "admin_id"
   add_foreign_key "goal_activities", "users", column: "student_id"
+  add_foreign_key "goal_comments", "goals"
+  add_foreign_key "goal_comments", "users", column: "admin_id"
   add_foreign_key "goals", "users", column: "admin_id"
   add_foreign_key "goals", "users", column: "student_id"
   add_foreign_key "homework_submissions", "homeworks"
