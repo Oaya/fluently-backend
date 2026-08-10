@@ -40,6 +40,7 @@ Rails.application.routes.draw do
         get :token
         patch :end
         patch :student_note
+        patch :meeting_note
       end
       resource :recording, only: [ :show, :create ], controller: "lesson_recordings"
     end
@@ -52,7 +53,13 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :goals, only: [ :index, :show, :create, :update, :destroy ]
+    resources :goals, only: [ :index, :show, :create, :update, :destroy ] do
+      member do
+        post :activity
+        patch :activity, action: :update_activity
+        delete "activity/:activity_id", action: :destroy_activity, as: :destroy_activity
+      end
+    end
 
     resource :subscription, only: [] do
       collection do

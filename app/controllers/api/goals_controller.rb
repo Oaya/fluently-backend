@@ -1,7 +1,7 @@
 class Api::GoalsController < ApplicationController
   before_action :authenticate_api_user!
   before_action :require_admin!, only: [ :create, :update, :destroy ]
-  before_action :set_goal, only: [ :show, :update, :destroy ]
+  before_action :set_goal, only: [ :show, :update, :destroy, :activity, :update_activity, :destroy_activity ]
   include Rails.application.routes.url_helpers
 
   # GET /api/goals
@@ -22,7 +22,7 @@ class Api::GoalsController < ApplicationController
 
   # GET /api/goals/:id
   def show
-    render json: goal_result(@goal), status: :ok
+    render json: goal_with_activities(@goal), status: :ok
   end
 
   # POST /api/goals
@@ -58,6 +58,72 @@ class Api::GoalsController < ApplicationController
     head :no_content
   end
 
+  # POST /api/goals/:id/activity
+  def activity
+    return render_error("Only students can submit homework", status: :forbidden) if current_api_user.role == "admin"
+
+    activity = @goal.goal_activities.new(
+      admin_id: @goal.admin_id,
+      student: current_api_user,
+      date: goal_activity_params[:date],
+      description: goal_activity_params[:description],
+      progress: goal_activity_params[:progress]
+    )
+
+    ActiveRecord::Base.transaction do
+      activity.save!
+      @goal.update!(goal_activity_params.slice(:status, :progress, :achieved_at).to_h.compact)
+    end
+
+
+    render json: goal_with_activities(@goal), status: :created
+  rescue ActiveRecord::RecordInvalid => e
+    render_error(e.record.errors.full_messages, status: :unprocessable_entity)
+  end
+
+  # PATCH /api/goals/:id/activity
+  def update_activity
+    return render_error("Only students can submit homework", status: :forbidden) if current_api_user.role == "admin"
+
+    activity = @goal.goal_activities.find(goal_activity_params[:activity_id])
+
+    ActiveRecord::Base.transaction do
+      activity.update!(goal_activity_params.slice(:date, :description, :progress).to_h.compact)
+      @goal.update!(goal_activity_params.slice(:status, :progress, :achieved_at).to_h.compact)
+    end
+
+    render json: goal_with_activities(@goal), status: :ok
+  rescue ActiveRecord::RecordNotFound
+    render_error("activity not found", status: :not_found)
+  rescue ActiveRecord::RecordInvalid => e
+    render_error(e.record.errors.full_messages, status: :unprocessable_entity)
+  end
+
+  # DELETE /api/goals/:id/activity/:activity_id
+  def destroy_activity
+    activity = @goal.goal_activities.find(params[:activity_id])
+
+    ActiveRecord::Base.transaction do
+      activity.destroy!
+      latest = @goal.goal_activities.order(date: :desc).first
+      progress = latest&.progress || 0
+
+      status = if progress == 100
+        "achieved"
+      elsif progress == 0
+        "not_started"
+      else
+        "in_progress"
+      end
+
+      @goal.update!(progress: progress, status: status, achieved_at: progress == 100 ? @goal.achieved_at : nil)
+    end
+
+    head :no_content
+  rescue ActiveRecord::RecordNotFound
+    render_error("activity not found", status: :not_found)
+  end
+
 
   private
 
@@ -75,11 +141,19 @@ class Api::GoalsController < ApplicationController
     )
   end
 
+   def goal_activity_params
+    params.permit(
+      :activity_id, :date, :description,
+      :progress, :status, :achieved_at
+    )
+   end
+
   def goal_result(goal)
     result = {
       id: goal.id,
       student_id: goal.student.id,
       title: goal.title,
+      description: goal.description,
       status: goal.status,
       progress: goal.progress,
       target_date: goal.target_date,
@@ -87,6 +161,30 @@ class Api::GoalsController < ApplicationController
       achieved_at: goal.achieved_at
     }
 
+    result
+  end
+
+  def goal_with_activities(goal)
+    result = {
+      id: goal.id,
+      student_id: goal.student.id,
+      title: goal.title,
+      description: goal.description,
+      status: goal.status,
+      progress: goal.progress,
+      target_date: goal.target_date,
+      created_at: goal.created_at,
+      achieved_at: goal.achieved_at,
+      activities: goal.goal_activities.order(date: :desc).map { |a|
+        {
+          id: a.id,
+          description: a.description,
+          date: a.date,
+          created_at: a.created_at,
+          progress: a.progress
+        }
+      }
+    }
     result
   end
 

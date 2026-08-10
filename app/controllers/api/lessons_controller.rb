@@ -1,7 +1,7 @@
 class Api::LessonsController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy ]
-  before_action :set_lesson, only: [ :show, :update, :destroy, :end, :student_note, :token ]
+  before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy, :meeting_note ]
+  before_action :set_lesson, only: [ :show, :update, :destroy, :end, :student_note, :meeting_note, :token ]
   include Rails.application.routes.url_helpers
 
   # GET /api/lessons
@@ -113,6 +113,19 @@ class Api::LessonsController < ApplicationController
     end
   end
 
+  # PATCH /api/lessons/:id/meeting_note
+  def meeting_note
+    unless current_api_user.role == "admin" && @lesson.admin_id == current_api_user.id
+      return render_error("No permission to access", status: :forbidden)
+    end
+
+    if @lesson.update(meeting_note_params)
+      render json: { meeting_note: @lesson.meeting_note }
+    else
+      render_error(@lesson.errors.full_messages, status: :unprocessable_entity)
+    end
+  end
+
   private
 
   def set_lesson
@@ -125,17 +138,21 @@ class Api::LessonsController < ApplicationController
   def lesson_params
     params.require(:lesson).permit(
       :student_id, :scheduled_at, :duration_in_minutes,
-      :status, :topic, :note, :payment_status, :language
+      :status, :topic, :teacher_note, :payment_status, :language
     )
   end
 
   def lesson_meeting_params
     params.require(:lesson).permit(
-      :meeting_duration_in_seconds, :status, :meeting_feedback
+      :meeting_duration_in_seconds, :status, :meeting_feedback, :meeting_note, :note_shared
     )
   end
 
   def student_note_params
     params.require(:lesson).permit(:student_note)
+  end
+
+  def meeting_note_params
+    params.require(:lesson).permit(:meeting_note)
   end
 end
