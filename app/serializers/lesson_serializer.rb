@@ -14,7 +14,7 @@ class LessonSerializer
       duration_in_minutes: @lesson.duration_in_minutes,
       status: @lesson.status,
       topic: @lesson.topic,
-      note: @lesson.note,
+      teacher_note: @lesson.teacher_note,
       language: @lesson.language,
       payment_status: @lesson.payment_status,
       created_at: @lesson.created_at,
@@ -22,6 +22,8 @@ class LessonSerializer
       room_name: @lesson.room_name,
       meeting_duration_in_seconds: @lesson.meeting_duration_in_seconds,
       meeting_feedback: @lesson.meeting_feedback,
+      meeting_note: @lesson.meeting_note,
+      note_shared: @lesson.note_shared,
       recording_url: recording_url,
       student_note: @current_user&.role == "student" ? @lesson.student_note : nil,
       student: {

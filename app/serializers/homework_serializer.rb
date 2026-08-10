@@ -18,14 +18,16 @@ class HomeworkSerializer
       level: @homework.level,
       ai_generated: @homework.ai_generated,
       status: homework_status_badge(@homework),
-      student: {
-        id: @homework.student.id,
-        first_name: @homework.student.first_name,
-        last_name: @homework.student.last_name,
-        avatar: UserSerializer.new(@homework.student, host: @host).avatar_url,
-        learning_languages: @homework.student.learning_languages
-      },
-      submission: sub && submission_result(sub)
+      submission: sub && submission_result(sub),
+      **(@role == "admin" ? {
+        student: {
+          id: @homework.student.id,
+          first_name: @homework.student.first_name,
+          last_name: @homework.student.last_name,
+          avatar: UserSerializer.new(@homework.student, host: @host).avatar_url,
+          learning_languages: @homework.student.learning_languages
+        }
+      } : {})
     }
 
     result
@@ -67,10 +69,11 @@ class HomeworkSerializer
 
   def homework_status_badge(homework)
     sub = homework.homework_submission
-    return "pending" if !sub
+    overdue = homework.due_date.present? && homework.due_date.to_date < Date.today
+
+    return overdue ? "overdue" : "pending" if !sub
     return sub.status if %w[submitted reviewed].include?(sub.status)
 
-    overdue = homework.due_date.present? && homework.due_date.to_date < Date.today
     overdue ? "overdue" : sub.status
   end
 
