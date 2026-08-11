@@ -5,6 +5,13 @@ if [ "${@: -2:1}" == "./bin/rails" ] && [ "${@: -1:1}" == "server" ]; then
   rm -f tmp/pids/server.pid
   ./bin/rails db:prepare
   ./bin/rails db:migrate:queue 2>/dev/null || true
+
+  # Seed the database only when SEED_DB=true is set
+  if [ "${SEED_DB}" == "true" ]; then
+    echo "==> Seeding database..."
+    ./bin/rails db:seed
+    echo "==> Seeding done."
+  fi
 fi
 
 exec "${@}"
