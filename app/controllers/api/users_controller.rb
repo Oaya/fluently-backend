@@ -1,7 +1,7 @@
 class Api::UsersController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin!, only: [ :index, :with_statues ]
-  before_action :require_admin!, :require_active_subscription!, only: [ :destroy ]
+  before_action :require_admin!, only: [ :index, :with_statues, :destroy ]
+  before_action :require_active_subscription!, only: [ :destroy ]
   before_action :set_user, only: [ :show, :update, :destroy ]
   include Rails.application.routes.url_helpers
 

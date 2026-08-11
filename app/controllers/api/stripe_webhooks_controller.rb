@@ -32,7 +32,6 @@ class Api::StripeWebhooksController < ApplicationController
   private
 
   def handle_checkout_session_completed(session)
-    pp "heloo Im here"
     customer_id = session.customer
     subscription_id = session.subscription
     user_data = session.metadata

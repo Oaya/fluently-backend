@@ -5,6 +5,7 @@ class InviteUser
   end
 
   def call
+    student_limit_error!
     existing = User.find_by(email: @params[:email])
 
     if existing.present?
@@ -36,5 +37,19 @@ class InviteUser
 
       SendInvitationEmailJob.perform_later(u.id)
     end
+  end
+
+  private
+
+  def student_limit_error!
+    max = @invited_by.plan.features["max_students"]
+
+    pp max
+
+    count = User.where(admin_id: @invited_by.id).count
+
+    return if count < max
+
+    raise StandardError, "Your plan allows only #{max} students"
   end
 end

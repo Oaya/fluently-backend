@@ -39,6 +39,10 @@ Rails.application.configure do
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "example.com" }
 
+  # Active Storage's disk service (used in test) generates direct-upload URLs
+  # through the Rails router, which needs a default host outside a real request.
+  Rails.application.routes.default_url_options[:host] = "example.com"
+
   # Print deprecation notices to the stderr.
   config.active_support.deprecation = :stderr
 
