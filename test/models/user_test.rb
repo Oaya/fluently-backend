@@ -2,14 +2,12 @@ require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
   test "is valid with valid attributes" do
-    tenant = create_tenant
-
     user = User.new(
-      tenant: tenant,
       first_name: "Aya",
       last_name: "Okizaki",
       email: "user-#{SecureRandom.hex(4)}@example.com",
       status: "active",
+      role: "student",
       password: "password123",
       password_confirmation: "password123",
       confirmed_at: Time.current
@@ -19,10 +17,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "requires first_name" do
-    tenant = create_tenant
-
     user = User.new(
-      tenant: tenant,
       last_name: "Okizaki",
       email: "user-#{SecureRandom.hex(4)}@example.com",
       status: "active",
@@ -36,10 +31,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "requires last_name" do
-    tenant = create_tenant
-
     user = User.new(
-      tenant: tenant,
       first_name: "Aya",
       email: "user-#{SecureRandom.hex(4)}@example.com",
       status: "active",
@@ -53,10 +45,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "requires email" do
-    tenant = create_tenant
-
     user = User.new(
-      tenant: tenant,
       first_name: "Aya",
       last_name: "Okizaki",
       status: "active",
@@ -69,26 +58,24 @@ class UserTest < ActiveSupport::TestCase
     assert_includes user.errors[:email], "can't be blank"
   end
 
-  test "requires tenant" do
+  test "requires role" do
     user = User.new(
       first_name: "Aya",
       last_name: "Okizaki",
       email: "user-#{SecureRandom.hex(4)}@example.com",
       status: "active",
+      role: nil,
       password: "password123",
       password_confirmation: "password123",
       confirmed_at: Time.current
     )
 
     assert_not user.valid?
-    assert user.errors[:tenant].any? || user.errors[:tenant_id].any?
+    assert_includes user.errors[:role], "can't be blank"
   end
 
   test "requires status" do
-    tenant = create_tenant
-
     user = User.new(
-      tenant: tenant,
       first_name: "Aya",
       last_name: "Okizaki",
       email: "user-#{SecureRandom.hex(4)}@example.com",
@@ -103,11 +90,9 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "requires unique email case insensitively" do
-    tenant = create_tenant
-    email = "test@example.com"
+    email = "test-#{SecureRandom.hex(4)}@example.com"
 
     User.create!(
-      tenant: tenant,
       first_name: "Aya",
       last_name: "One",
       email: email,
@@ -118,10 +103,9 @@ class UserTest < ActiveSupport::TestCase
     )
 
     duplicate = User.new(
-      tenant: tenant,
       first_name: "Aya",
       last_name: "Two",
-      email: "TEST@example.com",
+      email: email.upcase,
       status: "active",
       password: "password123",
       password_confirmation: "password123",
@@ -133,10 +117,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "accepts valid status values" do
-    tenant = create_tenant
-
     user = User.new(
-      tenant: tenant,
       first_name: "Aya",
       last_name: "Okizaki",
       email: "user-#{SecureRandom.hex(4)}@example.com",
@@ -151,10 +132,7 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "rejects invalid status values" do
-    tenant = create_tenant
-
     user = User.new(
-      tenant: tenant,
       first_name: "Aya",
       last_name: "Okizaki",
       email: "user-#{SecureRandom.hex(4)}@example.com",
@@ -169,16 +147,12 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "filter_by_status returns matching users" do
-    tenant = create_tenant
-
     active_user = create_user(
-      tenant: tenant,
       email: "active-#{SecureRandom.hex(4)}@example.com",
       status: "active"
     )
 
     invited_user = create_user(
-      tenant: tenant,
       email: "invited-#{SecureRandom.hex(4)}@example.com",
       status: "invited"
     )
@@ -190,19 +164,15 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "filter_by_role returns matching users" do
-    tenant = create_tenant
-
     admin_user = create_user(
-      tenant: tenant,
-      email: "admin-#{SecureRandom.hex(4)}@example.com"
+      email: "admin-#{SecureRandom.hex(4)}@example.com",
+      role: "admin"
     )
-    Membership.create!(user: admin_user, tenant: tenant, role: "admin")
 
     student_user = create_user(
-      tenant: tenant,
-      email: "student-#{SecureRandom.hex(4)}@example.com"
+      email: "student-#{SecureRandom.hex(4)}@example.com",
+      role: "student"
     )
-    Membership.create!(user: student_user, tenant: tenant, role: "student")
 
     results = User.filter_by_role("admin")
 
@@ -211,17 +181,13 @@ class UserTest < ActiveSupport::TestCase
   end
 
   test "filter_by_search matches first name last name and email" do
-    tenant = create_tenant
-
     matching_user = create_user(
-      tenant: tenant,
       first_name: "Aya",
       last_name: "Okizaki",
       email: "aya-#{SecureRandom.hex(4)}@example.com"
     )
 
     other_user = create_user(
-      tenant: tenant,
       first_name: "John",
       last_name: "Smith",
       email: "john-#{SecureRandom.hex(4)}@example.com"

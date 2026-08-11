@@ -1,6 +1,6 @@
 class Api::LessonsController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy, :meeting_note ]
+  before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy, :end, :meeting_note ]
   before_action :set_lesson, only: [ :show, :update, :destroy, :end, :student_note, :meeting_note, :token ]
   include Rails.application.routes.url_helpers
 

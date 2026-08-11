@@ -3,7 +3,7 @@ module Api
     class InvitationsController < Devise::InvitationsController
       respond_to :json
 
-      before_action :authenticate_api_user!, :require_admin!, :set_current_user, only: [ :create ]
+      before_action :authenticate_api_user!, :require_admin!, only: [ :create ]
 
       # POST /api/auth/invitation Send invitation email
       def create
