@@ -24,7 +24,7 @@ class InviteUser
         role: "student",
         status: "invited",
         admin_id: @invited_by.id,
-        learning_languages: @params[:learning_languages],
+        language_levels: @params[:language_levels],
         skip_invitation: true
       },
       @invited_by
@@ -44,11 +44,11 @@ class InviteUser
   def student_limit_error!
     max = @invited_by.plan.features["max_students"]
 
-    pp max
+    return if max == "unlimited"
 
     count = User.where(admin_id: @invited_by.id).count
 
-    return if count < max
+    return if count < max.to_i
 
     raise StandardError, "Your plan allows only #{max} students"
   end

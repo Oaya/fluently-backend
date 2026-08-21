@@ -20,7 +20,7 @@ class UserSerializer
     }
 
     if @user.role === "student"
-      json[:learning_languages] = @user.learning_languages
+      json[:language_levels] = @user.language_levels
     end
 
     unless @user.role == "student"

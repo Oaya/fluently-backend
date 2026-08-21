@@ -32,7 +32,7 @@ class LessonSerializer
         last_name: @lesson.student.last_name,
         avatar: UserSerializer.new(@lesson.student, host: @host).avatar_url,
         email: @lesson.student.email,
-        learning_languages: @lesson.student.learning_languages
+        language_levels: @lesson.student.language_levels
       }
     }
   end

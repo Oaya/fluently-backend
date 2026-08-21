@@ -9,9 +9,10 @@ Rails.application.routes.draw do
         registrations: "api/auth/registrations",
         sessions: "api/auth/sessions",
         confirmations: "api/auth/confirmations",
-        invitations: "api/auth/invitations"
+        invitations: "api/auth/invitations",
+        passwords: "api/auth/passwords"
       },
-      only: [ :registrations, :sessions, :confirmations, :invitations ]
+      only: [ :registrations, :sessions, :confirmations, :invitations, :passwords ]
 
     # Not Devise routes, but still auth-related, so putting here for now
     namespace :auth do
