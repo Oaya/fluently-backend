@@ -29,6 +29,7 @@ class Api::UsersController < ApplicationController
 
   # PATCH /api/users/:id
   def update
+    pp user_params
     if @user.update(user_params)
       render json: UserSerializer.new(@user, host: request.base_url).user_result
     else
@@ -96,7 +97,7 @@ class Api::UsersController < ApplicationController
       :email,
       :status,
       :timezone,
-      learning_languages: []
+      language_levels: [ :language, :level ]
     )
   end
 

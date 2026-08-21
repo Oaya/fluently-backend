@@ -25,7 +25,7 @@ class HomeworkSerializer
           first_name: @homework.student.first_name,
           last_name: @homework.student.last_name,
           avatar: UserSerializer.new(@homework.student, host: @host).avatar_url,
-          learning_languages: @homework.student.learning_languages
+          language_levels: @homework.student.language_levels
         }
       } : {})
     }

@@ -44,7 +44,7 @@ module Api
 
       def invite_params
         params.require(:users).map do |inv_params|
-          inv_params.permit(:email, :first_name, :last_name, learning_languages: [])
+          inv_params.permit(:email, :first_name, :last_name, language_levels: [ :language, :level ])
         end
       end
 
