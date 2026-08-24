@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_000001) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_24_223753) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -114,6 +114,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_000001) do
     t.index ["student_id"], name: "index_homeworks_on_student_id"
   end
 
+  create_table "invoices", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "admin_id", null: false
+    t.decimal "amount", precision: 10, scale: 2, null: false
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.date "due_date"
+    t.uuid "lesson_id", null: false
+    t.text "notes"
+    t.datetime "paid_at"
+    t.string "status", default: "unpaid", null: false
+    t.uuid "student_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_id"], name: "index_invoices_on_admin_id"
+    t.index ["lesson_id"], name: "index_invoices_on_lesson_id"
+    t.index ["student_id"], name: "index_invoices_on_student_id"
+  end
+
   create_table "lesson_recordings", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "duration_in_seconds"
@@ -171,6 +188,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_000001) do
     t.string "confirmation_token"
     t.datetime "confirmed_at"
     t.datetime "created_at", null: false
+    t.string "currency", default: "USD"
     t.datetime "current_period_end"
     t.string "email", null: false
     t.string "encrypted_password", default: "", null: false
@@ -185,6 +203,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_000001) do
     t.string "invited_by_type"
     t.jsonb "language_levels", default: []
     t.string "last_name", null: false
+    t.decimal "lesson_rate", precision: 10, scale: 2
     t.uuid "plan_id"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
@@ -219,6 +238,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_000001) do
   add_foreign_key "homework_submissions", "users", column: "student_id"
   add_foreign_key "homeworks", "users", column: "admin_id"
   add_foreign_key "homeworks", "users", column: "student_id"
+  add_foreign_key "invoices", "lessons"
+  add_foreign_key "invoices", "users", column: "admin_id"
+  add_foreign_key "invoices", "users", column: "student_id"
   add_foreign_key "lesson_recordings", "lessons"
   add_foreign_key "lessons", "users", column: "admin_id"
   add_foreign_key "lessons", "users", column: "student_id"

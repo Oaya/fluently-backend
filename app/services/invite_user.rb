@@ -44,7 +44,7 @@ class InviteUser
   def student_limit_error!
     max = @invited_by.plan.features["max_students"]
 
-    return if max == "unlimited"
+    return if max == "Unlimited"
 
     count = User.where(admin_id: @invited_by.id).count
 
