@@ -46,7 +46,12 @@ Rails.application.routes.draw do
       resource :recording, only: [ :show, :create ], controller: "lesson_recordings"
     end
 
-    resources :homeworks, only: [ :index, :show, :create, :update, :destroy ]
+    resources :homeworks, only: [ :index, :show, :create, :update, :destroy ] do
+      collection do
+        post :ai_generate
+      end
+    end
+
 
     resources :homework_submissions, only: [ :index, :show, :create, :destroy ] do
       member do

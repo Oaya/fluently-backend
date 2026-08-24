@@ -47,6 +47,7 @@ gem "aws-sdk-s3"
 gem "stripe"
 gem "mailjet"
 gem "livekit-server-sdk", require: "livekit"
+gem "ruby-openai"
 
 group :development, :test do
   gem "dotenv-rails"

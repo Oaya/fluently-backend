@@ -24,4 +24,14 @@ class ApplicationController < ActionController::API
       status: :payment_required
     )
   end
+
+  def require_pro_plan!
+    user = current_api_user
+    return if user.plan&.name == "pro" && user.subscription_status == "active"
+
+    render_error(
+      "This feature requires an active Pro plan subscription.",
+      status: :payment_required
+    )
+  end
 end
