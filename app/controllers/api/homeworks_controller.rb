@@ -1,6 +1,7 @@
 class Api::HomeworksController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy ]
+  before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy, :ai_generate ]
+  before_action :require_pro_plan!, only: [ :ai_generate ]
   before_action :set_homework, only: [ :show, :update, :destroy ]
   include Rails.application.routes.url_helpers
 
@@ -58,6 +59,24 @@ class Api::HomeworksController < ApplicationController
     head :no_content
   end
 
+  # POST /api/homeworks/ai_generate
+  def ai_generate
+    student = current_api_user.students.find_by(id: ai_generate_params[:student_id])
+    return render_error("Student not found", status: :not_found) unless student
+
+    generated = GenerateHomeworkWithAi.new(
+      language: ai_generate_params[:language],
+      level: ai_generate_params[:level],
+      exercise_type: ai_generate_params[:exercise_type],
+      topics: ai_generate_params[:topics] || [],
+      notes: ai_generate_params[:notes]
+    ).call
+
+    render json: generated, status: :ok
+  rescue => e
+    render_error("AI generation failed: #{e.message}", status: :unprocessable_entity)
+  end
+
 
   private
 
@@ -73,5 +92,9 @@ class Api::HomeworksController < ApplicationController
       :student_id, :title, :instructions,
       :language, :level, :due_date, :ai_generated
     )
+  end
+
+  def ai_generate_params
+    params.permit(:student_id, :language, :level, :exercise_type, :notes, topics: [])
   end
 end
