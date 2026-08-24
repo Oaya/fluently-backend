@@ -19,7 +19,7 @@ class SeedPlans < ActiveRecord::Migration[8.0]
         price: 10,
         stripe_price_id: "price_1SznDlAkHFmsFUgnSFS8RrhD",
         features: {
-          max_students: "unlimited",
+          max_students: "Unlimited",
           session_schedule: true,
           homework_assignments: true,
           payment_tracking: true,

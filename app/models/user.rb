@@ -14,6 +14,9 @@ class User < ApplicationRecord
   has_many :goal_activities_as_admin, class_name: "GoalActivity", foreign_key: :admin_id, dependent: :destroy
   has_many :goals_activities_as_student, class_name: "GoalActivity", foreign_key: :student_id, dependent: :destroy
   has_many :goal_comments_as_admin, class_name: "GoalComment", foreign_key: :admin_id, dependent: :destroy
+  has_many :invoices_as_admin, class_name: "Invoice", foreign_key: :admin_id
+  has_many :invoices, foreign_key: :student_id
+
 
   validates :first_name, :last_name, :email, :role, presence: true
   validates :email, uniqueness: { case_sensitive: false }
