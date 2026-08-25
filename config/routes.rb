@@ -42,6 +42,7 @@ Rails.application.routes.draw do
         patch :end
         patch :student_note
         patch :meeting_note
+        patch :cancel
       end
       resource :recording, only: [ :show, :create ], controller: "lesson_recordings"
     end
