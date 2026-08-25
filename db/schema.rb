@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_24_223753) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_25_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -184,11 +184,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_223753) do
   create_table "users", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "admin_id"
     t.boolean "cancel_at_period_end"
+    t.integer "cancellation_window_hours", default: 24
     t.datetime "confirmation_sent_at"
     t.string "confirmation_token"
     t.datetime "confirmed_at"
     t.datetime "created_at", null: false
-    t.string "currency", default: "USD"
+    t.string "currency"
     t.datetime "current_period_end"
     t.string "email", null: false
     t.string "encrypted_password", default: "", null: false
@@ -203,7 +204,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_223753) do
     t.string "invited_by_type"
     t.jsonb "language_levels", default: []
     t.string "last_name", null: false
+    t.integer "late_cancellation_fee_percent", default: 100
     t.decimal "lesson_rate", precision: 10, scale: 2
+    t.integer "no_show_fee_percent", default: 100
     t.uuid "plan_id"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"

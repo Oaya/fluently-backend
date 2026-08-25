@@ -1,7 +1,7 @@
 class AddLessonRate < ActiveRecord::Migration[8.1]
   def change
     add_column :users, :lesson_rate, :decimal, precision: 10, scale: 2
-    add_column :users, :currency, :string, default: "USD"
+    add_column :users, :currency, :string
 
     create_table :invoices, id: :uuid do |t|
       t.references :admin, type: :uuid, null: false, foreign_key: { to_table: :users }
