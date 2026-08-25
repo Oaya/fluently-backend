@@ -97,6 +97,9 @@ class Api::UsersController < ApplicationController
       :email,
       :status,
       :timezone,
+      :lesson_rate,
+      :currency,
+      :cancellation_policy,
       language_levels: [ :language, :level ]
     )
   end

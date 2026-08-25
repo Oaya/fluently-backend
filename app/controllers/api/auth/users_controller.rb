@@ -75,7 +75,8 @@ module Api
       private
 
       def user_params
-        params.permit(:first_name, :last_name, :avatar_signed_id, :email, :timezone, :learning_language)
+        params.permit(:first_name, :last_name, :avatar_signed_id, :email, :timezone, :learning_language,
+                      :no_show_fee_percent, :late_cancellation_fee_percent, :cancellation_window_hours)
       end
     end
   end
