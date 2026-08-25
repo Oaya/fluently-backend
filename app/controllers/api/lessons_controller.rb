@@ -1,7 +1,7 @@
 class Api::LessonsController < ApplicationController
   before_action :authenticate_api_user!
   before_action :require_admin!, :require_active_subscription!, only: [ :create, :update, :destroy, :end, :meeting_note ]
-  before_action :set_lesson, only: [ :show, :update, :destroy, :end, :student_note, :meeting_note, :token ]
+  before_action :set_lesson, only: [ :show, :update, :destroy, :end, :student_note, :meeting_note, :token, :cancel ]
   include Rails.application.routes.url_helpers
 
   # GET /api/lessons
@@ -107,6 +107,37 @@ class Api::LessonsController < ApplicationController
     end
 
     if @lesson.update(student_note_params)
+      render json: LessonSerializer.new(@lesson, host: request.base_url, current_user: current_api_user).lesson_result
+    else
+      render_error(@lesson.errors.full_messages, status: :unprocessable_entity)
+    end
+  end
+
+  # PATCH /api/lessons/:id/cancel
+  def cancel
+    unless current_api_user.role == "student" && @lesson.student_id == current_api_user.id
+      return render_error("No permission to access", status: :forbidden)
+    end
+
+    unless @lesson.status == "scheduled"
+      return render_error("Only scheduled lessons can be cancelled", status: :unprocessable_entity)
+    end
+
+    attrs = { status: "canceled" }
+
+    # Calculate and persist late cancellation fee if applicable
+    admin = @lesson.admin
+    student = current_api_user
+    if admin.cancellation_window_hours.to_i > 0 && student.lesson_rate.present?
+      hours_until = (@lesson.scheduled_at - Time.current) / 3600.0
+      if hours_until < admin.cancellation_window_hours
+        fee_percent = admin.late_cancellation_fee_percent.to_f
+        attrs[:cancellation_fee_amount] = (student.lesson_rate * fee_percent / 100.0).round(2)
+        attrs[:cancellation_fee_currency] = student.currency.presence || "USD"
+      end
+    end
+
+    if @lesson.update(attrs)
       render json: LessonSerializer.new(@lesson, host: request.base_url, current_user: current_api_user).lesson_result
     else
       render_error(@lesson.errors.full_messages, status: :unprocessable_entity)
