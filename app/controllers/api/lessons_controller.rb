@@ -27,6 +27,13 @@ class Api::LessonsController < ApplicationController
     student = current_api_user.students.find_by(id: lesson_params[:student_id])
     return render_error("Student not found", status: :not_found) unless student
 
+    errors = []
+    errors << "Student has no lesson rate set. Please edit the student profile first." if student.lesson_rate.blank?
+    errors << "Student has no currency set. Please edit the student profile first." if student.currency.blank?
+    errors << "Your account has no timezone set. Please update your profile first." if current_api_user.timezone.blank?
+    errors << "Student has no timezone set. Please edit the student profile first." if student.timezone.blank?
+    return render_error(errors, status: :unprocessable_entity) if errors.any?
+
     lesson = Lesson.new(lesson_params.merge(admin: current_api_user))
 
     if lesson.save
@@ -42,7 +49,23 @@ class Api::LessonsController < ApplicationController
       return render_error("Student not found", status: :not_found)
     end
 
-    if @lesson.update(lesson_params)
+    extra_attrs = {}
+
+    if lesson_params[:status] == "no_show" && @lesson.status != "no_show"
+      # Calculate no-show fee when transitioning to no_show
+      student = @lesson.student
+      admin = current_api_user
+      if student.lesson_rate.present? && admin.no_show_fee_percent.to_i > 0
+        extra_attrs[:cancellation_fee_amount] = (student.lesson_rate * admin.no_show_fee_percent / 100.0).round(2)
+        extra_attrs[:cancellation_fee_currency] = student.currency.presence || "USD"
+      end
+    elsif @lesson.status == "no_show" && lesson_params[:status].present? && lesson_params[:status] != "no_show"
+      # Clear fee when moving away from no_show
+      extra_attrs[:cancellation_fee_amount] = nil
+      extra_attrs[:cancellation_fee_currency] = nil
+    end
+
+    if @lesson.update(lesson_params.merge(extra_attrs))
       render json: LessonSerializer.new(@lesson, host: request.base_url, current_user: current_api_user).lesson_result
     else
       render_error(@lesson.errors.full_messages, status: :unprocessable_entity)
@@ -93,7 +116,21 @@ class Api::LessonsController < ApplicationController
 
   # PATCH /api/lessons/:id/end
   def end
-    if @lesson.update(lesson_meeting_params)
+    extra_attrs = {}
+
+    if lesson_meeting_params[:status] == "no_show" && @lesson.status != "no_show"
+      student = @lesson.student
+      admin = current_api_user
+      if student.lesson_rate.present? && admin.no_show_fee_percent.to_i > 0
+        extra_attrs[:cancellation_fee_amount] = (student.lesson_rate * admin.no_show_fee_percent / 100.0).round(2)
+        extra_attrs[:cancellation_fee_currency] = student.currency.presence || "USD"
+      end
+    elsif @lesson.status == "no_show" && lesson_meeting_params[:status].present? && lesson_meeting_params[:status] != "no_show"
+      extra_attrs[:cancellation_fee_amount] = nil
+      extra_attrs[:cancellation_fee_currency] = nil
+    end
+
+    if @lesson.update(lesson_meeting_params.merge(extra_attrs))
       render json: LessonSerializer.new(@lesson, host: request.base_url, current_user: current_api_user).lesson_result
     else
       render_error(@lesson.errors.full_messages, status: :unprocessable_entity)
