@@ -6,7 +6,6 @@ class Invoice < ApplicationRecord
   enum :status, { unpaid: "unpaid", paid: "paid" }, validate: true
 
   validates :amount, presence: true, numericality: { greater_than: 0 }
-  validates :currency, presence: true
 
   def mark_paid!
     update!(status: "paid", paid_at: Time.current)
