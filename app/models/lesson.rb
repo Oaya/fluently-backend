@@ -12,13 +12,7 @@ class Lesson < ApplicationRecord
     no_show: "no_show"
   }, validate: true
 
-  enum :payment_status, {
-    unpaid: "unpaid",
-    paid: "paid",
-    refund: "refund"
-  }, validate: true
-
-  validates :scheduled_at, :status, :payment_status, presence: true
+  validates :scheduled_at, :status, presence: true
   validates :duration_in_minutes, numericality: { greater_than: 0, only_integer: true }, allow_nil: true
   validates :meeting_duration_in_seconds, numericality: { greater_than: 0, only_integer: true }, allow_nil: true
 

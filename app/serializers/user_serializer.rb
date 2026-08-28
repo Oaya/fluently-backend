@@ -22,13 +22,14 @@ class UserSerializer
     if @user.role === "student"
       json[:language_levels] = @user.language_levels
       json[:lesson_rate] = @user.lesson_rate
-      json[:currency] = @user.currency
     end
 
     unless @user.role == "student"
-      json[:no_show_fee_percent]           = @user.no_show_fee_percent
+      json[:no_show_fee_percent] = @user.no_show_fee_percent
       json[:late_cancellation_fee_percent] = @user.late_cancellation_fee_percent
-      json[:cancellation_window_hours]     = @user.cancellation_window_hours
+      json[:cancellation_window_hours] = @user.cancellation_window_hours
+      json[:currency] = @user.currency
+      json[:has_pro_access] = @user.plan&.name == "pro" && @user.subscription_status == "active"
       json[:subscription] = {
         status: @user.subscription_status,
         plan: @user.plan&.name,

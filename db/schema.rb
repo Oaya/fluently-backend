@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_24_223753) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_26_215222) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -118,7 +118,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_223753) do
     t.uuid "admin_id", null: false
     t.decimal "amount", precision: 10, scale: 2, null: false
     t.datetime "created_at", null: false
-    t.string "currency", null: false
     t.date "due_date"
     t.uuid "lesson_id", null: false
     t.text "notes"
@@ -143,7 +142,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_223753) do
   create_table "lessons", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "admin_id", null: false
     t.decimal "cancellation_fee_amount", precision: 10, scale: 2
-    t.string "cancellation_fee_currency"
     t.datetime "created_at", null: false
     t.integer "duration_in_minutes"
     t.string "language", default: "", null: false
@@ -151,7 +149,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_223753) do
     t.string "meeting_feedback"
     t.string "meeting_note"
     t.boolean "note_shared"
-    t.string "payment_status", default: "unpaid"
     t.string "room_name"
     t.datetime "scheduled_at", null: false
     t.string "status", default: "scheduled", null: false

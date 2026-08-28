@@ -25,6 +25,8 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :invoices, only: [ :index, :create, :update, :destroy, :show ]
+
     resources :users, only: [ :index, :show, :update, :destroy ] do
       collection do
         get :with_statues
