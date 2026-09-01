@@ -8,8 +8,8 @@ class Api::UsersController < ApplicationController
   # GET /api/users
   # This endpoint get students
   def index
-    users = User.includes(:admin).filtering(filter_params).where.not(id: current_api_user.id).where(admin_id: current_api_user.id)
-    users = users.order(sort_params) if sort_params.present?
+    users = User.includes(:admin).where.not(id: current_api_user.id).where(admin_id: current_api_user.id)
+
 
     render json: users.map { |user| UserSerializer.new(user, host: request.base_url).user_result }
   end
@@ -65,29 +65,6 @@ class Api::UsersController < ApplicationController
     end
 
     permitted
-  end
-
-  def sort_params
-    allowed = %w[first_name email status role]
-    priority_order = [ "status", "role", "first_name", "email" ]
-    sort = params[:sort].to_s
-
-    return nil if sort.blank?
-
-    parts = sort.split(",")
-    reordered = parts.sort_by do |part|
-      field = part.delete_prefix("-")
-      priority_order.index(field) || 999
-    end
-
-    clauses = reordered.map do |p|
-      dir = p.start_with?("-") ? "DESC" : "ASC"
-      field = p.delete_prefix("-")
-      next unless allowed.include?(field)
-      "#{field} #{dir}"
-    end.compact
-
-    clauses.join(", ")
   end
 
   def user_params

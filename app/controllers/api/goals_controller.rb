@@ -1,6 +1,6 @@
 class Api::GoalsController < ApplicationController
   before_action :authenticate_api_user!
-  before_action :require_admin!, only: [ :create, :update, :destroy, :comment, :destroy_comment ]
+  before_action :require_admin!, only: [ :comment, :destroy_comment ]
   before_action :set_goal, only: [ :show, :update, :destroy, :activity, :update_activity, :destroy_activity, :comment, :destroy_comment ]
   include Rails.application.routes.url_helpers
 
@@ -27,10 +27,17 @@ class Api::GoalsController < ApplicationController
 
   # POST /api/goals
   def create
-    student = current_api_user.students.find_by(id: goal_params[:student_id])
-    return render_error("Student not found", status: :not_found) unless student
+    if current_api_user.admin?
+      student = current_api_user.students.find_by(id: goal_params[:student_id])
+      return render_error("Student not found", status: :not_found) unless student
+      admin = current_api_user
+    else
+      student = current_api_user
+      admin = current_api_user.admin
+      return render_error("Admin not found", status: :not_found) unless admin
+    end
 
-    goal = Goal.new(goal_params.merge(admin: current_api_user))
+    goal = Goal.new(goal_params.except(:student_id).merge(student: student, admin: admin))
 
     if goal.save
       render json: goal_result(goal), status: :created
@@ -41,11 +48,16 @@ class Api::GoalsController < ApplicationController
 
   # PATCH /api/goals/:id
   def update
-    if goal_params[:student_id].present? && !current_api_user.students.exists?(id: goal_params[:student_id])
-      return render_error("Student not found", status: :not_found)
+    if current_api_user.admin?
+      if goal_params[:student_id].present? && !current_api_user.students.exists?(id: goal_params[:student_id])
+        return render_error("Student not found", status: :not_found)
+      end
+      update_params = goal_params
+    else
+      update_params = goal_params.except(:student_id)
     end
 
-    if @goal.update(goal_params)
+    if @goal.update(update_params)
       render json: goal_result(@goal)
     else
       render_error(@goal.errors.full_messages, status: :unprocessable_entity)
