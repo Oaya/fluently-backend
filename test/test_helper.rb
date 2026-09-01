@@ -65,8 +65,7 @@ module TestDataHelper
       admin: admin,
       student: student,
       scheduled_at: 1.day.from_now,
-      status: "scheduled",
-      payment_status: "unpaid"
+      status: "scheduled"
     }.merge(attrs))
   end
 
