@@ -85,6 +85,9 @@ jobs:
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
+          SECRET_KEY_BASE: ${{ secrets.SECRET_KEY_BASE || 'ci-secret-key-base-placeholder-at-least-30-chars' }}
+          DEVISE_JWT_SECRET_KEY: ${{ secrets.DEVISE_JWT_SECRET_KEY || 'ci-jwt-secret-key-placeholder-at-least-30-chars' }}
+          MAILER_FROM: noreply@example.com
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
