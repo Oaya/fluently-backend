@@ -7,10 +7,10 @@ class Api::LessonsController < ApplicationController
   # GET /api/lessons
   def index
     lessons = if current_api_user.admin?
-      scope = current_api_user.lessons_as_admin.includes(:student, :admin)
+      scope = current_api_user.lessons_as_admin.includes(:student, :admin, :invoice)
       params[:student_id].present? ? scope.where(student_id: params[:student_id]) : scope
     else
-      current_api_user.lessons_as_student.includes(:student, :admin)
+      current_api_user.lessons_as_student.includes(:student, :admin, :invoice)
     end
 
     lessons = lessons.order(scheduled_at: :desc)
