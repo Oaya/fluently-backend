@@ -50,9 +50,12 @@ class Api::GoalsControllerTest < ActionDispatch::IntegrationTest
 
   # --- create ---
 
-  test "create is forbidden for students" do
-    post api_goals_url, params: { goal: { student_id: @student.id, title: "Goal", target_date: 1.month.from_now.to_date } }, headers: auth_header(@student)
-    assert_response :forbidden
+  test "create builds a goal for the student themself" do
+    assert_difference "Goal.count", 1 do
+      post api_goals_url, params: { goal: { title: "Goal", target_date: 1.month.from_now.to_date } }, headers: auth_header(@student)
+    end
+    assert_response :created
+    assert_equal @student.id, response.parsed_body["student_id"]
   end
 
   test "create builds a goal for the admin's own student" do
@@ -75,9 +78,10 @@ class Api::GoalsControllerTest < ActionDispatch::IntegrationTest
 
   # --- update ---
 
-  test "update is forbidden for students" do
+  test "update modifies the goal for the owning student" do
     patch api_goal_url(@goal), params: { goal: { title: "Updated" } }, headers: auth_header(@student)
-    assert_response :forbidden
+    assert_response :success
+    assert_equal "Updated", @goal.reload.title
   end
 
   test "update modifies the goal" do
@@ -88,9 +92,11 @@ class Api::GoalsControllerTest < ActionDispatch::IntegrationTest
 
   # --- destroy ---
 
-  test "destroy is forbidden for students" do
-    delete api_goal_url(@goal), headers: auth_header(@student)
-    assert_response :forbidden
+  test "destroy removes the goal for the owning student" do
+    assert_difference "Goal.count", -1 do
+      delete api_goal_url(@goal), headers: auth_header(@student)
+    end
+    assert_response :no_content
   end
 
   test "destroy removes a goal that has activities and comments" do

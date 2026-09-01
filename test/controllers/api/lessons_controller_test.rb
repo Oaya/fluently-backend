@@ -46,6 +46,9 @@ class Api::LessonsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create builds a lesson for the admin's own student" do
+    @admin.update!(currency: "USD", timezone: "UTC")
+    @student.update!(lesson_rate: 25, timezone: "UTC")
+
     assert_difference "Lesson.count", 1 do
       post api_lessons_url, params: { lesson: { student_id: @student.id, scheduled_at: 1.day.from_now } }, headers: auth_header(@admin)
     end
