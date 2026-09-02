@@ -1,4 +1,4 @@
-# Fluently — Backend
+# Fluently - Backend
 
 Rails 8 API-only backend for Fluently, a multi-teacher SaaS languages learning platform for teachers and small schools.
 
@@ -9,13 +9,13 @@ Rails 8 API-only backend for Fluently, a multi-teacher SaaS languages learning p
 - **Ruby** 3.3.10
 - **Rails** 8.1
 - **PostgreSQL** 16
-- **Devise + devise-jwt** — authentication via JWT
-- **Active Storage + S3** — file uploads
-- **Stripe** — subscription billing
-- **LiveKit** — real-time video lessons
-- **OpenAI** — AI homework generation
-- **Mailjet** — transactional email
-- **Puma** — web server
+- **Devise + devise-jwt** - authentication via JWT
+- **Active Storage + S3** - file uploads
+- **Stripe** - subscription billing
+- **LiveKit** - real-time video lessons
+- **OpenAI** - AI homework generation
+- **Mailjet** - transactional email
+- **Puma** - web server
 
 ---
 
@@ -65,9 +65,9 @@ Copy `.env.example` to `.env` and fill in the values:
 | `LIVEKIT_API_KEY`       | LiveKit API key                                         |
 | `LIVEKIT_API_SECRET`    | LiveKit API secret                                      |
 | `OPENAI_API_KEY`        | OpenAI API key                                          |
-| `OPEN_API_MODEL`        | OpenAI model (e.g. `gpt-4.1-mini`)                     |
+| `OPEN_API_MODEL`        | OpenAI model (e.g. `gpt-4.1-mini`)                      |
 
-Rails credentials can also be used instead of env vars — edit with:
+Rails credentials can also be used instead of env vars - edit with:
 
 ```bash
 cd backend && EDITOR=nano bundle exec rails credentials:edit
@@ -123,9 +123,9 @@ bundle exec bundler-audit
 
 GitHub Actions runs on every push to `main` and on pull requests:
 
-- **scan_ruby** — Brakeman + Bundler Audit
-- **lint** — RuboCop
-- **test** — Full Minitest suite against a PostgreSQL service container
+- **scan_ruby** - Brakeman + Bundler Audit
+- **lint** - RuboCop
+- **test** - Full Minitest suite against a PostgreSQL service container
 
 ---
 
@@ -135,4 +135,4 @@ GitHub Actions runs on every push to `main` and on pull requests:
 - **Multi-tenancy**: Students belong to an admin via `admin_id` on the `users` table. All queries are scoped through `current_api_user`.
 - **File uploads**: Active Storage with S3. The frontend uses direct uploads via `POST /api/rails/active_storage/direct_uploads` and passes back the `signed_id`.
 - **Stripe webhooks**: Handled at `POST /api/stripe/webhooks`. Set the webhook secret in env vars.
-- **Filtering**: Models support a `Filterable` pattern — `Model.filtering(params)` dispatches to `filter_by_<field>` scopes.
+- **Filtering**: Models support a `Filterable` pattern - `Model.filtering(params)` dispatches to `filter_by_<field>` scopes.
